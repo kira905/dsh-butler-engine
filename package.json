@@ -1,0 +1,56 @@
+{
+  "name": "@kira905/dsh-butler-engine",
+  "version": "0.1.0",
+  "description": "Resident tick scheduler with single-instance job locks, an autonomy switch matrix and a hash-chained audit log. Zero runtime dependencies.",
+  "type": "module",
+  "main": "./src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./paths": "./src/dsh-butler/lib/paths.mjs",
+    "./locks": "./src/dsh-butler/lib/butler-locks.mjs",
+    "./autonomy": "./src/dsh-butler/lib/autonomy-modules.mjs",
+    "./store": "./src/dsh-butler/lib/store.mjs"
+  },
+  "bin": {
+    "butler-tickd": "./bin/butler-tickd.mjs"
+  },
+  "files": [
+    "src",
+    "bin",
+    "docs",
+    "examples",
+    "test",
+    "README.md",
+    "README.en.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node test/run-all.mjs"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "ops",
+    "scheduler",
+    "resident",
+    "autonomy",
+    "lock",
+    "audit"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "AGPL-3.0-only",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitee.com/kira905/dsh-butler-engine.git"
+  },
+  "homepage": "https://gitee.com/kira905/dsh-butler-engine#readme",
+  "bugs": {
+    "url": "https://gitee.com/kira905/dsh-butler-engine/issues"
+  }
+}
