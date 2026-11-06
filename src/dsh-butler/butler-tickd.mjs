@@ -240,7 +240,7 @@ export const JOBS = [
     benignExitCodes: [3], benignExitLabel: '日志缺失 / hits 目录不可写 / 上轮未释放 ⇒ 本轮让路' },
   // ── 心情播报定时（2026-11-02 · 跨线派活：the operator<mainline>线 → butler线 · the operator 13:3x 拍板「A+B 一起」）──
   //   语义 = 每 15 分钟跑 `tools\mood-broadcast\broadcast.mjs`，把本机 state 读成一枚小快照写到
-  //     `~/.dsh/feiyu-mood-broadcast/<机器名>.json`（本机 = ZephyrusAir.json），供对端只读拉取。
+  //     `~/.dsh/feiyu-mood-broadcast/<机器名>.json`（本机 = <host-a>.json），供对端只读拉取。
   //   治什么：判据 14-c「两边互相听得见」要求播报件保持新鲜；方案档 L87 早就写了「每 N 分钟播一次」，
   //     但**从未实现** ⇒ 播报件只在人工跑时更新，30 分钟后就判红。技术债 = `docs\技术债台账-the operator<mainline>.md` TD-35。
   //     时效判据 = 播报落后 state ≤ 30 分钟（= 2× 周期），判据器默认 maxStaleMin=30 正好，不改器具阈值。
@@ -434,14 +434,14 @@ export const JOBS = [
   //   通道择路由脚本自己做（先 `--peer` 给的别名，不通再试 `<别名>-lan`）。
   { id: 'secretary-drift', label: '小秘书跨机体检（只读 · 每天 09:40）', at: '09:40', initialMs: 0,
     script: path.join(DSH, 'tools', 'secretary-drift-check.mjs'),
-    args: ['--peer', 'm6800', '--report-dir', path.join(DSH, 'docs', 'report-dir')],
+    args: ['--peer', '<peer>', '--report-dir', path.join(DSH, 'docs', 'report-dir')],
     dir: path.join(DSH, 'tools'),
     benignExitCodes: [3], benignExitLabel: '对端不可达（隧道关 / 对端离线）⇒ 本轮让路' },
   // preset 漂移巡检（主线「the operator<mainline>」卡① · 2026-10-23）：
   //   为什么有它（主线验收判据第 8 条）：「任何人改完人格忘了重内联 ⇒ **当天就被发现**，不靠人想起来」。
   //   0.2.0 只认 `cordis.patch.yml` 的**内联**，目录版是手改的真源 ⇒ 两份漂移 = 改了不生效、且没人知道
   //   （<host> 的 whale-girl 29,380 / 27,070 自 2026-10-21 起就是这个状态，直到 10-23 手工比对才发现）。
-  //   本 job 每天只读比一遍「本机 + 对端（缺省 m6800）」每份 preset 的目录 ↔ 内联 + 关键标记命中数，
+  //   本 job 每天只读比一遍「本机 + 对端（缺省 <peer>）」每份 preset 的目录 ↔ 内联 + 关键标记命中数，
   //   报告落 `docs/`；日报「摘要」段渲染其中一行（lib\preset-drift-line.mjs）。
   //   ⚠️ **时段 08:50 是刻意的：必须早于 daily(09:00)** —— 日报要读**当天**那份报告；排在 09:00 之后就只能报到隔夜的。
   //   ⚠️ `benignExitCodes:[3]`（2026-11-04 卡 V31-031 · 两态拆分）：**只把「对端不可达」当让路** —— 对端没开机 /
@@ -455,7 +455,7 @@ export const JOBS = [
   //      抬到 2 分钟（同 stall-nudge 档）：真卡死（对端 SSH 半通）仍会被 budget 兜住。
   { id: 'preset-drift', label: 'preset 漂移巡检（只读 · 每天 08:50）', at: '08:50', initialMs: 0,
     script: path.join(DSH, 'tools', 'dsh-butler', 'preset-drift-tick.mjs'),
-    args: ['--peer', 'm6800', '--report-dir', path.join(DSH, 'docs', 'report-dir')],
+    args: ['--peer', '<peer>', '--report-dir', path.join(DSH, 'docs', 'report-dir')],
     dir: path.join(DSH, 'tools'), budgetMs: 120_000,
     benignExitCodes: [3], benignExitLabel: '对端不可达（隧道关 / 对端离线）⇒ 本轮让路；真漂移 exit 1 照红' },
   // ── 2026-10-26（卡「V3功能面·号段哨兵挂job」）：`band-sentinel` ─────────────────────────────
@@ -491,8 +491,8 @@ export const JOBS = [
   //   口径真源：`docs/` §8 **V31-016**（需求登记）+ 本卡交付报告。
   //   ⚠️【2026-10-27 · 卡「V3功能面·哨兵默认关」】**本 job 只该在 <host> 上跑** ⇒ 声明 `defaultWhenUnset:'off'`
   //      （the operator 2026-10-27 01:0x 拍板 C 方案 = 治本，不是"对端先埋 job off"）：
-  //      ① 器具要 `rog`/`m6800`/`tuf` 三个 ssh 别名，三台里只有 <host> 齐；<host> 的 `~/.ssh/config` 只有
-  //         `gitee.com`、<host> 只有 `rog`/`tuf-lan` ⇒ 那两台跑起来**必然 rc=4**（有结论地失败，但纯属无意义开销）。
+  //      ① 器具要 `<host-a>`/`<peer>`/`<peer>` 三个 ssh 别名，三台里只有 <host> 齐；<host> 的 `~/.ssh/config` 只有
+  //         `gitee.com`、<host> 只有 `<host-a>`/`<peer-lan>` ⇒ 那两台跑起来**必然 rc=4**（有结论地失败，但纯属无意义开销）。
   //      ② `butler-tickd.mjs` 是**双机同一份代码**（随仓同步）⇒ 对端同步到本版后**必须显式授权**才会跑；
   //         缺键即关 = fail-safe，因此**不必也不能**去对端预埋 `job off`（对端零写入）。
   //      ③ <host> 自己**已显式 `job on`**（`butler-autonomy.json#jobs['band-sentinel']`，
@@ -781,8 +781,8 @@ export const JOBS = [
   //         事实依据：tickd 只在 <host> 常驻，<host> 侧**没有 tickd**（S2c 卡遗留的待拍板项，至今未解决）⇒
   //         照"只允许 <host>"写，这个 job 就是 **100% 让路**（本卡实测 runs=45 / skips=43 / allowedHosts=[]）。
   //         本卡按缺口台账 `docs/` §6 建议 2 改为**本机放行**：
-  //         `args: ['--allow-host', 'zephyrusair']`（下方 job 行）。依据 = 本机实测 `os.hostname()` = `ZephyrusAir`
-  //         （比较时大小写不敏感）；且生产向量库 `~\.dsh\memory-vectors\vectors.db` 的 `meta.hostId` 本来就 = `ZephyrusAir`。
+  //         `args: ['--allow-host', '<host-a>']`（下方 job 行）。依据 = 本机实测 `os.hostname()` = `<host-a>`
+  //         （比较时大小写不敏感）；且生产向量库 `~\.dsh\memory-vectors\vectors.db` 的 `meta.hostId` 本来就 = `<host-a>`。
   //         **关回 = 把 args 改回 `[]`**（一字之差，与 `hot --skip-sessions` 先例同款；改完须 `--stop` + `--ensure`）。
   //   `benignExitCodes: [3]` —— 让路码（**宿主未声明 / 记忆库不存在 / 引擎入口缺失**）属环境语义，
   //      **不计 failures**（卡 AT19 口径；真失败仍走 1）。
@@ -803,13 +803,13 @@ export const JOBS = [
     defaultWhenUnset: 'off',
     script: 'memory-change-audit-tick.mjs', args: [], dir: HERE },
   { id: 'memory-vectors', label: '记忆向量同步（编码桥 + 增量同步 · 默认关）', intervalMs: 60 * MIN, initialMs: 510_000,
-    script: 'butler-memory-vectors-tick.mjs', args: ['--allow-host', 'zephyrusair,precisionm6800'], dir: HERE,
+    script: 'butler-memory-vectors-tick.mjs', args: ['--allow-host', '<host-a>,<host-b>'], dir: HERE,
     benignExitCodes: [3], benignExitLabel: '宿主未声明 / 记忆库不存在 / 引擎入口缺失 ⇒ 安全跳过（不建库、不报红）' },
   // ── 2026-10-11（卡「跨机记忆库每小时自动同步」· the operator 01:11 令）───────────────────────────
   //   语义 = 每小时一次跨机记忆库**双向收敛**（各机各跑一半，形态见 `mem-sync-tick.mjs` 头注释）：
-  //     · driver（<host> `zephyrusair`）：取对端**只读快照**（对端跑 VACUUM INTO）→ 合并进本机库
+  //     · driver（<host> `<host-a>`）：取对端**只读快照**（对端跑 VACUUM INTO）→ 合并进本机库
   //         → 产本机合并后快照**投递到对端 inbox** → 重建本机向量。
-  //     · follower（<host> `precisionm6800`）：读**本地** inbox 里 driver 投递的快照 → 合并进本机
+  //     · follower（<host> `<host-b>`）：读**本地** inbox 里 driver 投递的快照 → 合并进本机
   //         → 重建本机向量（**不需要网络回连 <host>**，所以 <host> 关机/外出也照跑）。
   //   ⚠️ 角色由主机名自动判定（`args` 恒 `--role auto`）⇒ **两台机可共用同一份代码**；
   //      未知主机名 ⇒ 让路 exit 3（宁可不动，不瞎跑）。
@@ -900,10 +900,10 @@ export const JOBS = [
     intervalMs: 60 * MIN, initialMs: 1_310_000,
     script: 'family-vectors-tick.mjs', dir: HERE,
     // —— 路线 (乙)（已落 · 在用）：<host> tickd + ssh 代跑对端现成 0.1.1（对端零改动）
-    args: ['--apply', '--exec', 'ssh', '--remote', 'm6800-lan', '--remote-fallback', 'm6800',
-      '--allow-host', 'precisionm6800'],
+    args: ['--apply', '--exec', 'ssh', '--remote', '<peer-lan>', '--remote-fallback', '<peer>',
+      '--allow-host', '<host-b>'],
     // —— 路线 (甲)（备选 · 落地时另抄一份调度项到对端 tickd）：
-    // args: ['--apply', '--exec', 'local', '--allow-host', 'precisionm6800'],
+    // args: ['--apply', '--exec', 'local', '--allow-host', '<host-b>'],
     budgetMs: 2_700_000, defaultWhenUnset: 'off',
     benignExitCodes: [3], benignExitLabel: '锁被占 / 对端不可达 ⇒ 本轮让路（不计失败）' },
 
@@ -928,7 +928,7 @@ export const JOBS = [
   //   回滚（一行）：删掉本条 + 重启 tickd（`--stop` 后由守护鱼 30s 内 `--ensure`，或显式 `--ensure`）。
   { id: 'memory-sync-leaf', label: '<host>→<host> 叶子推送（单向 · 15 分钟 · 默认关）', intervalMs: 15 * MIN, initialMs: 900_000,
     script: 'mem-push-leaf.mjs',
-    args: ['--peer-lan', 'tuf-lan', '--peer-tunnel', 'tuf', '--apply', '--tmp-dir', path.join(TEMP, 'dsh-mem-sync-leaf')],
+    args: ['--peer-lan', '<peer-lan>', '--peer-tunnel', '<peer>', '--apply', '--tmp-dir', path.join(TEMP, 'dsh-mem-sync-leaf')],
     dir: HERE, defaultWhenUnset: 'off',
     benignExitCodes: [3], benignExitLabel: '对端不可达 ⇒ 安全跳过（<host> 进网后自动收敛）' },
   // ── 2026-10-22（卡「素材库中心化」· 方案 §3.5「每小时一轮 + 开机后一轮」）────────────────
@@ -948,7 +948,7 @@ export const JOBS = [
   //   ⑤ 一键关回 = `node <butler-root>\tools\dsh-butler\butler-autonomy-cli.mjs job off secretary-sync --reason "…"`。
   { id: 'secretary-sync', label: '素材库中心化同步（每小时 + 开机一轮）', intervalMs: 60 * MIN, initialMs: 120_000,
     script: path.join(DSH, 'tools', 'secretary-sync.mjs'),
-    args: ['--peer', 'm6800', '--apply', '--json'],
+    args: ['--peer', '<peer>', '--apply', '--json'],
     dir: path.join(DSH, 'tools'),
     // ⚠️ `budgetMs: 120_000`（2026-10-22 首跑实测后补，照 plug-guard / snapshot 先例）：默认预算是 10_000ms
     //   （`heavy/class-default`），而一轮要么在**按需短租**上（enable+up+复探 ≈ 6–20 s）、要么在**首次补齐**上
@@ -1461,7 +1461,7 @@ export const JOBS = [
   //   为什么要它：隧道**常驻**之后必须有**独立保活**，不能继续挂在 `net-arbiter` 上
   //     （方案 §7：保活下沉到 `relay-keepalive`；net-arbiter 还有六件职责没全部移交 ⇒ 它的计划任务**不许拆**）。
   //   脚本 `tools\relay\relay-keepalive.mjs`（**缺省 dry-run**，这里显式 `--apply`）：
-  //     · 四元组判定 = `enabled` + `process` + `port19080` + **端到端探针**（`ssh m6800 hostname`，≤3 s）
+  //     · 四元组判定 = `enabled` + `process` + `port19080` + **端到端探针**（`ssh <peer> hostname`，≤3 s）
   //       —— 只看端口不够（实测踩过「process=1 而端口空」和「端口在听但隧道半死」两种病态）；
   //     · 已在听且探针通 ⇒ **零动作**（幂等，绝不重复建连）；只缺端口 / 只缺探针 ⇒ 按半死**真重建**；
   //     · `enabled=false` ⇒ **先 `relay-cli enable` 再 `up`**（`up` 要求 enabled=true，单条拉不起来）。

@@ -260,7 +260,7 @@ export const LOCK_REGISTRY = [
   //   `lockRunner: true`：脚本自身无 acquireTickLock（可被手工直跑）⇒ 由 tickd 包装层抢锁，
   //   避免手工直跑与 tick 并发重复传输、争状态文件。
   { job: 'session-mirror', lockName: 'session-mirror', script: 'dsh-session-mirror.mjs', ttlMs: 30 * 60 * 1000, intervalMs: 60 * 60 * 1000,
-    critical: ['<host> `<butler-root>-session-mirror\\rog\\.dsh`（镜像目标，**只增不删**：远端永不 purge）',
+    critical: ['<host> `<butler-root>-session-mirror\\<host-a>\\.dsh`（镜像目标，**只增不删**：远端永不 purge）',
       '生产 `~/.dsh/{sessions,_archived-sessions,attachments}`（**只读**）',
       '~/.dsh/butler-session-mirror.json（增量状态）',
       // 【R9 · 2026-10-14】按需短租：通道（lan/隧道）都不通时经 `relay-cli` 短租 —— **会写**下面这些
@@ -892,7 +892,7 @@ export const LOCK_REGISTRY = [
   //   ⚠️ 该 job 声明 `benignExitCodes:[3]`（对端不可达 = 正常让路，不记 failures）。
   { job: 'secretary-drift', lockName: 'secretary-drift', script: 'secretary-drift-check.mjs',
     ttlMs: 300_000, intervalMs: 0,
-    critical: ['对端（<host>）`tools\\` 下测试件 / lib 的 **sha + 大小（只读对照）**（经 `--peer m6800`，通道由脚本自己择路）',
+    critical: ['对端（<host>）`tools\\` 下测试件 / lib 的 **sha + 大小（只读对照）**（经 `--peer <peer>`，通道由脚本自己择路）',
       '`docs/`（**写**：差异清单 + 分级；一份/天，覆盖写）',
       '**不自动改任何一侧**（下发与否由人拍）⇒ 无写远端面'],
     skipPolicy: 'skip', source: 'tickd' },

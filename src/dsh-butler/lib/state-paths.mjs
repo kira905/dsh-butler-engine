@@ -112,7 +112,9 @@ export function inferMode(home) {
     return 'legacy';
   } catch (e) {
     // B-3：绝不静默 —— 这里曾把 ReferenceError 吞掉，让 inferMode 恒返 legacy（假绿根因）
-    console.error(`[LOUD] inferMode 失败（按 legacy 兜底）：${e?.message ?? e}`);
+    // 【0.1.0】唯一豁免：ENOENT（状态根还不存在 = 全新机器 / 首次运行）是**正当情形**，
+    //   此时按 legacy 兜底且不报噪声；其它错误（权限 / 路径非法 / 扫到一半被删）照旧 LOUD。
+    if (e?.code !== 'ENOENT') console.error(`[LOUD] inferMode 失败（按 legacy 兜底）：${e?.message ?? e}`);
     return 'legacy';
   }
 }
