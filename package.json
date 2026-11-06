@@ -47,10 +47,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://gitee.com/kira905/dsh-butler-engine.git"
+    "url": "git+https://github.com/kira905/dsh-butler-engine.git"
   },
-  "homepage": "https://gitee.com/kira905/dsh-butler-engine#readme",
+  "homepage": "https://github.com/kira905/dsh-butler-engine#readme",
   "bugs": {
-    "url": "https://gitee.com/kira905/dsh-butler-engine/issues"
+    "url": "https://github.com/kira905/dsh-butler-engine/issues"
   }
 }
