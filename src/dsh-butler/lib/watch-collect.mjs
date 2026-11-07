@@ -284,7 +284,7 @@ export function parseCsv(text) {
 /**
  * 计划任务结果码（每 tick，轻量）。
  * ⚠️ 两个实测坑（2026-09-09）：
- *   ① `/fo CSV /v` 不转义字段内嵌引号（`wscript.exe "D:\..."`）→ 引号状态机错位、全表 exists:false；
+ *   ① `/fo CSV /v` 不转义字段内嵌引号（`wscript.exe "<path>"`）→ 引号状态机错位、全表 exists:false；
  *   ② 从 Node spawnSync 调用时输出是**控制台代码页 GBK**（字段名 "任务名"/"上次结果"），
  *      而 pwsh 交互式调用显示英文 —— 必须 GBK 解码 + 中英文字段名双兼容。
  * 改用 `/fo LIST /v`：按空行分块 + 正则取字段。

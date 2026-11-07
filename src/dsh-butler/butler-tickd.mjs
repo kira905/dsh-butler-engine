@@ -197,7 +197,7 @@ export const JOBS = [
   //     ① `selectChannel` 缺省按 `'wechat'`，不再是 `() => null`；
   //     ② **真发与否只由 `opts.send` 决定**：`opts.send` 缺省 ⇒ `undeliverable/no-transport`，CLI 只在
   //        `--fake-transport`（夹具专用）时注入假实现 ⇒ **本 job 行的 args 里永远不带 `--fake-transport`**；
-  //     ③ 真发送末端 = `tools\wechat-bridge\lib\messaging\direct-transport.mjs`，接线属 **N3**（要操作者在场）；
+  //     ③ 真发送末端 = 由宿主自行注入的外部通道（本包不提供任何具体通道实现），接线属 **N3**（要操作者在场）；
   //     ④ 语义扩到：静音窗 22:30–07:00 进次日 07:00–08:00 汇总、`activation.json` 开闸下界（缺 ⇒ `rc=4`）、
   //        `attempts.json` 有界重试（3 轮 ⇒ `gave-up`）。
   //     真源 = `docs/` §2 C3/C4 · §3.5；N2 交付报告同批。
@@ -398,16 +398,8 @@ export const JOBS = [
   { id: 'upstream', label: '官方上游动态', at: '09:20', initialMs: 0,
     script: path.join(DSH, 'tools', 'dsh-upstream-watch.mjs'),
     args: ['--report-dir', path.join(DSH, 'docs', 'report-dir')], dir: path.join(DSH, 'tools') },
-  // 外部通道官方 SDK 版本盯梢（2026-10-30 · 操作者 17:20 拍板「发图暂缓，盯着 SDK 更新」）：
-  //   为什么：外部通道腿（iLink）下行 CDN 要第二个参数 `encrypted_param`，而官方 SDK 2.4.10 仍是单参数
-  //   （服务端先改、SDK 没跟）⇒ 「发二维码图片」暂缓。官方哪天发新版 ⇒ 脚本写一条 info 告警喊人回来看。
-  //   纯只读 + 零 token + 零依赖；状态 `~/.dsh/wechat-sdk-watch-state.json`，同一版本只喊一次（幂等）。
-  //   **绝不自动升级**（脚本只"看"，不装包）；网络失败打印一句 + exit 0（不刷告警）。
-  //   10:10 落在早晨巡检链（09:00→09:40）之后、与其余表位不撞车。
-  //   真源 docs/ / docs/
-  { id: 'wechat-sdk-watch', label: '外部通道官方SDK版本盯梢', at: '10:10', initialMs: 0,
-    script: path.join(DSH, 'tools', 'wechat-bridge', 'watch-official-sdk.mjs'),
-    args: [], dir: path.join(DSH, 'tools', 'wechat-bridge') },
+  // （本包不含外部通道 SDK 盯梢 job：它的脚本属宿主私有通道树，不随开源发布；
+  //   宿主若要盯着通道 SDK 更新，自行在自己的作业表里登记一条，接口与其它只读 job 同形。）
   // 升级巡检（2026-09-15 · 卡 S8「升级分级授权·A3」②：重建「DSH 版本体检」/「Adapter 生态跟踪」的载体）
   //   为什么是 tickd job 而不是看板 recurring 卡（**重建选型的论证**）：
   //     ① 口径 §5 / §6 D2 已拍板「执行主体 = 计划任务脚本链，0 token，不建卡、不唤起 LLM 会话」；

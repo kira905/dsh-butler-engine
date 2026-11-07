@@ -108,7 +108,7 @@ butler-tickd --status
 |---|---|---|
 | 心跳 / 单实例锁 / 调度日志 | `%TEMP%\dsh-butler-tickd\`（`state.json` / `lock` / `dsh-butler-tickd.log`） | 环境变量 `DSH_TICKD_DIR` |
 | 配置与审计（放行开关、审计流水、告警日志） | `~/.dsh\`（Windows：`C:\Users\<你>\.dsh`） | 环境变量 `BUTLER_DSH_HOME` 或 `DSH_HOME` |
-| 作业脚本树根（作业表里 `path.join(DSH, …)` 那部分） | `~/dsh`（即 `C:\Users\<你>\dsh`） | 环境变量 `BUTLER_ROOT` |
+| 作业脚本树根（作业表里 `path.join(DSH, …)` 那部分） | `~/dsh`（Windows 上落在用户目录下的 `dsh` 子目录） | 环境变量 `BUTLER_ROOT` |
 
 ## 已知限制（第一版就说清楚）
 

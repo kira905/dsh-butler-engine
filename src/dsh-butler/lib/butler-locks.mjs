@@ -140,13 +140,7 @@ export const LOCK_REGISTRY = [
   { job: 'upstream', lockName: 'upstream', script: 'dsh-upstream-watch.mjs', ttlMs: 900_000, intervalMs: 0,
     critical: ['~/.dsh/upstream-watch-<host>.json（基线，按主机分文件）', 'docs/'],
     skipPolicy: 'skip', source: 'tickd' },
-  // 外部通道官方 SDK 版本盯梢（2026-10-30 · 操作者 17:20 拍板）：每天 10:10 只读查 npm `latest`，
-  //   与基线 2.4.10 不同 ⇒ 写一条 info 告警（同一版本只喊一次）。脚本**不装包、不升级**。
-  //   TTL 15 分钟：正常秒级；`--deep`（默认不启用）内含 npm pack，给足余量。
-  //   脚本自带幂等（lastAlertedVersion）+ 只读，抢不到锁静默跳过即可 —— 第二天照跑，不丢结论。
-  { job: 'wechat-sdk-watch', lockName: 'wechat-sdk-watch', script: 'wechat-bridge/watch-official-sdk.mjs', ttlMs: 900_000, intervalMs: 0,
-    critical: ['~/.dsh/wechat-sdk-watch-state.json（基线 + 已告警版本）', '~/.dsh/butler-alert.log（版本变化时一行）'],
-    skipPolicy: 'skip', source: 'tickd' },
+  // （本包不含外部通道 SDK 盯梢的锁登记：它的脚本属宿主私有通道树，不随开源发布。）
   // 升级巡检（2026-09-15 · 卡 S8「升级分级授权·A3」②「巡检载体重建」）：
   //   载体 = tickd job（**0 token**，不建卡、不唤起 LLM 会话）；每日 09:30 触发、脚本内月频闸
   //   （默认 1/15，配置 ~/.dsh/upgrade-automation.json 的 patrol.days）决定是否真出报告。
@@ -732,7 +726,7 @@ export const LOCK_REGISTRY = [
       '%TEMP%/dsh-butler-tickd/state.json（**只读**：`jobs[<jobId>]` 的三条判据 + runs）',
       '<butler-root>/logs/notify-docsync-<日期>.jsonl（**写**：每轮判定留痕，含 throttled / noop）',
       '~/.dsh/butler-alert.log（**仅发送失败时**写一行，走既有 `lib/alert.mjs`，不改其行为）',
-      '🔴 **真动作**：`tools\\wechat-bridge\\cli.mjs send --go` 真发一条外部通道 —— **只发给操作者自己**'
+      '🔴 **真动作**：经宿主自行注入的外部通道真发一条 —— **只发给操作者自己**'
         + '（配置文件里的 `to`），不发群、不加人、不广播'],
     skipPolicy: 'skip', source: 'tickd', lockRunner: true,
     lockRunnerReason: '脚本无 acquireTickLock 且允许手工直跑（--status / --apply）⇒ 必须由包装层抢锁，'
@@ -948,7 +942,7 @@ export const LOCK_REGISTRY = [
   //        另新增 `attempts.json`（有界重试 3 轮 ⇒ gave-up）与 `digest.json`（静音窗汇总桶）；
   //        `activation.json` 由 `--activate` 写、job 内**只读**（缺 ⇒ fail-closed `rc=4`）。
   //     ② N2 起 `selectChannel` 缺省按 `'wechat'`（不再是 `() => null`）；**真发与否只由 `opts.send` 决定**，
-  //        缺省 ⇒ `undeliverable/no-transport`。真发送末端 = `tools\wechat-bridge\lib\messaging\direct-transport.mjs`，
+  //        缺省 ⇒ `undeliverable/no-transport`。真发送末端 = 由宿主自行注入的外部通道（本包不提供实现），
   //        接线属 **N3**（要操作者在场 + 开闸窗口）。
   //     ③ 锁纪律的现行口径 = 方案 §0c **#18**（提醒链自身不持锁 / 由 `lockRunner` 单实例串行）
   //        ＋ **#21**（`DSH_BUTLER_TICK_LOCK_HELD` 含 `family-remind` ⇒ job 环境**可归档**；否则手工禁归档；
@@ -962,7 +956,7 @@ export const LOCK_REGISTRY = [
       '~/.dsh/family-calendar/digest.json（**写**：静音窗 22:30–07:00 汇总桶，tmp+rename）',
       '~/.dsh/family-calendar/activation.json（**只读**：开闸下界，缺 ⇒ fail-closed `rc=4`；只由 `--activate --at <ISO>` 写）',
       '~/.dsh/family-calendar/events.json + relations.json（**只读**：到点判定与收件人）',
-      '**真发送（N3 接线后）**：经 `tools\\wechat-bridge\\lib\\messaging\\direct-transport.mjs` 直发（不传 contextToken、不走 channels.mjs）；`opts.send` 缺省 ⇒ `undeliverable/no-transport`，一条不发'],
+      '**真发送（N3 接线后）**：经宿主自行注入的外部通道直发（不传 contextToken、不走通道适配层）；`opts.send` 缺省 ⇒ `undeliverable/no-transport`，一条不发'],
     skipPolicy: 'skip', source: 'tickd',
     lockRunner: true,
     lockRunnerReason: '脚本自身无 acquireTickLock 且可被手工直跑（--once --apply）⇒ 必须由包装层抢锁，'

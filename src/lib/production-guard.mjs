@@ -68,7 +68,7 @@ export const DSH_ROOT = process.env.BUTLER_PROTECTED_ROOT || path.join(os.homedi
 
 // ───────────────────────────────────────────────────────── 1) 路径工具
 
-/** 去尾部分隔符（盘根 `C:\` 不动）。 */
+/** 去尾部分隔符（盘符根「字母 + 冒号 + 反斜杠」不动）。 */
 function stripTail(p) {
   const s = String(p);
   if (/^[a-zA-Z]:[\\/]?$/.test(s)) return s.slice(0, 2) + '\\';

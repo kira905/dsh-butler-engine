@@ -402,16 +402,16 @@ export function findActionHit(text, patterns) {
   return null;
 }
 
-/** 路径前缀提取：`C:\\workspace\tools\dsh-butler\steward.mjs` 与 `tools\dsh-butler\…` 都要能对上。 */
+/** 路径前缀提取：`<盘>:\workspace\tools\dsh-butler\steward.mjs` 与 `tools\dsh-butler\…` 都要能对上。 */
 const PATH_TOKEN_RE = /(?:[A-Za-z]:\\)?(?:[\w.\-]+\\)+[\w.\-]*/g;
 
 /**
  * 抽出一张卡面里出现的「路径前缀键」（用于两两找互斥）。
  * 取法：路径串按 `\` 切段 ⇒ 同时看「含末段（可能是文件名）」与「只剩目录」两种切法，
- * 各取尾部 2~3 段拼成键（绝对/相对两种写法因此能对上：`C:\\workspace\tools\dsh-butler\a.mjs`
+ * 各取尾部 2~3 段拼成键（绝对/相对两种写法因此能对上：`<盘>:\workspace\tools\dsh-butler\a.mjs`
  * 与 `tools\dsh-butler\b.mjs` 都会产出 `tools\dsh-butler`）。
  * 🔴 只认 **ASCII 段链**，且**键的末段必须带 `-` / `.` / `_`** ——
- *    否则 `dsh\tools`、`dsh\docs` 这种"整个 C:\\workspace 都在其中"的泛键会让所有卡互斥（宁可判不出，不许瞎判）。
+ *    否则 `dsh\tools`、`dsh\docs` 这种"整个工作盘根目录都在其中"的泛键会让所有卡互斥（宁可判不出，不许瞎判）。
  * @returns {string[]}
  */
 export function pathPrefixesOf(text) {
@@ -1986,9 +1986,9 @@ export async function selftest() {
 
   run('夹具6 · C6 · 两张卡都碰 tools\\dsh-butler\\ ⇒ 互斥且 rivals 互相指对', () => {
     const cards = new Map([
-      ['c6-mx-0001', { id: 'c6-mx-0001', title: '卡A', description: '改 C:\\workspace\\tools\\dsh-butler\\steward.mjs 的两段' }],
+      ['c6-mx-0001', { id: 'c6-mx-0001', title: '卡A', description: '改 <盘>:\\workspace\\tools\\dsh-butler\\steward.mjs 的两段' }],
       ['c6-mx-0002', { id: 'c6-mx-0002', title: '卡B', description: '动 tools\\dsh-butler\\standup.mjs 的排序' }],
-      ['c6-mx-0003', { id: 'c6-mx-0003', title: '卡C', description: '把 C:\\workspace\\docs/ 里那句补上' }],
+      ['c6-mx-0003', { id: 'c6-mx-0003', title: '卡C', description: '把 <盘>:\\workspace\\docs/ 里那句补上' }],
     ]);
     const c = buildCollision({ cards, items: ['c6-mx-0001', 'c6-mx-0002', 'c6-mx-0003'] });
     const by = new Map(c.items.map((x) => [x.cardId, x]));
@@ -2091,7 +2091,7 @@ export async function selftest() {
   });
 
   run('夹具12 · C6 · 全库惯例路径（df ≥ max(8, 2%)）不进互斥判据（否则 99.6% 的卡都"撞车"）', () => {
-    const boiler = '收尾要跑 C:\\workspace\\tools\\dsh-butler\\changelog-add.mjs 记一行';
+    const boiler = '收尾要跑 <盘>:\\workspace\\tools\\dsh-butler\\changelog-add.mjs 记一行';
     const cards = new Map();
     for (let i = 0; i < 8; i++) cards.set(`c6-df-000${i}`, { id: `c6-df-000${i}`, title: `卡${i}`, description: boiler });
     for (const id of ['c6-df-9001', 'c6-df-9002']) cards.set(id, { id, title: id, description: boiler });
@@ -2109,7 +2109,7 @@ export async function selftest() {
   const TMP_HOMES = [];
   const mkSessItems = (list) => list.map((x) => ({
     sessionId: x.sid, updatedAt: x.updatedAt, running: !!x.running, blank: !!x.blank,
-    cwd: x.cwd ?? 'C:\\workspace', projections: { values: { title: x.title } },
+    cwd: x.cwd ?? '<盘>:\\workspace', projections: { values: { title: x.title } },
   }));
   const mkRpc = (list) => async () => ({ status: 200, body: { result: { ok: true, value: { items: mkSessItems(list) } } } });
   const mkHome = (bindings = null) => {
@@ -2127,7 +2127,7 @@ export async function selftest() {
   };
   const NOW = 1793557400000;
   const LIVE = { sid: 'fixture-session-a', title: '【运行】示例主线 · 赛博生活',
-    updatedAt: NOW - 3600e3, running: true, blank: false, cwd: 'C:\\workspace' };
+    updatedAt: NOW - 3600e3, running: true, blank: false, cwd: '<盘>:\\workspace' };
   const live = (over = {}) => ({ ...LIVE, ...over });
   const shaOf = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
 
@@ -2188,7 +2188,7 @@ export async function selftest() {
   });
 
   run('夹具19 · C7 · cwd 落在 card-sessions ⇒ 跳过（--include-cards 才放行）', () => {
-    const card = { ...LIVE, cwd: 'C:\\workspace\\card-sessions' };
+    const card = { ...LIVE, cwd: '<盘>:\\workspace\\card-sessions' };
     const plan = planBroadcast({ items: [card], bindings: null, now: NOW, selfSid: '' });
     assert(plan.sendCount === 0 && plan.blocked[0].reasons.includes('card-session'), `卡执行会话没跳过：${JSON.stringify(plan.blocked[0])}`);
     const plan2 = planBroadcast({ items: [card], bindings: null, now: NOW, selfSid: '', includeCards: true });
@@ -2241,7 +2241,7 @@ export async function selftest() {
   });
 
   run('夹具23 · C7 · 超 --max ⇒ 多出来的记 over-max（防手滑投一大堆）', () => {
-    const many = [0, 1, 2, 3].map((i) => ({ ...LIVE, sid: `session-bbbb000${i}-2222-3333-4444-555566667777`, title: `【运行】第${i}条线 · 活`, updatedAt: NOW - (i + 1) * 60e3 }));
+    const many = [0, 1, 2, 3].map((i) => ({ ...LIVE, sid: `fixture-bcast-${i}`, title: `【运行】第${i}条线 · 活`, updatedAt: NOW - (i + 1) * 60e3 }));
     const plan = planBroadcast({ items: many, bindings: null, now: NOW, selfSid: '', max: 2 });
     assert(plan.sendCount === 2 && plan.overMax === 2, `max=2 应 2 投 2 挡，实际 ${plan.sendCount}/${plan.overMax}`);
     assert(plan.reasons['over-max'] === 2, 'over-max 没进理由计数');

@@ -28,7 +28,7 @@ export function resolveDshHome(configured) {
   // 纯空白（'   '）是 truthy 会被当成"已设置"，而 `'   '.trim()` 又是空串 ⇒
   // 既不采信 BUTLER_DSH_HOME、也**跳过 DSH_HOME**，直接落回 `~/.dsh`（生产 home）。
   // 实测后果：测试/金丝雀场景里只要残留一个空白值，脚本就静默读写**生产**，
-  // 而调用方以为自己在沙箱里（2026-09-14 实测：want 沙箱 / got C:\Users\<u>\.dsh）。
+  // 而调用方以为自己在沙箱里（2026-09-14 实测：want 沙箱 / got 生产 home）。
   const override = envValue('BUTLER_DSH_HOME') ?? envValue('DSH_HOME')
   if (override) return path.resolve(override)
   return path.join(os.homedir(), '.dsh')
@@ -62,7 +62,7 @@ function envValue(name) {
  * 优先级：显式参数 > $DSH_WORKSPACE > 由 home 推导（**仅当 home 被环境变量重定向到
  * <某目录>\.dsh 这种"测试实例"形态时**）> <butler-root>。
  * ⚠️ 判据必须是「env 显式指向了非默认 home」而不是"路径层数够"——生产 home 也是
- * `C:\Users\<u>\.dsh`（3 层），按层数判会把 workspace 错推成 `C:\Users\<u>`。
+ * `<用户目录>\.dsh`（3 层），按层数判会把 workspace 错推成 `<用户目录>`。
  */
 export function resolveDshWorkspace(configured) {
   if (configured) return path.resolve(configured)
