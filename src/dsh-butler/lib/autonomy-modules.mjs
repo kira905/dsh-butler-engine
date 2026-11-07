@@ -175,7 +175,7 @@ export const MODULE_IDS = {
       + '避免"两把总闸谁说话"；家规接入点 = L0 降档闸 + 升级锁 + 登记可查性（④ 包 §3.1 的 noOwnerWhy 原文口径）。'
       + '【A-8 可见化】正因没有 L1 键，四键全关也关不掉它、放行也管不到它 ⇒ 列入日报「不受四键约束的自治成员」段。',
   },
-  // ── 【2026-11-02 · 卡 6f121702「统筹线·脑子」】`steward`：统筹线脑子（甲层批处理）的 L2 开关位 ──────
+  // ── 【2026-11-02 · 卡 6f121702「协调线·脑子」】`steward`：协调线脑子（甲层批处理）的 L2 开关位 ──────
   //   语义 = tickd job `steward` 每天 08:20 只读产物（看板 / 晨报 / 年轮 json）→ 排序 → 算收敛线 →
   //     写自己的流水账（`~/.dsh/steward-state.json`）。**零模型调用、零 token**（方案 §1.1 甲层）。
   //   `owner: null` = **不吃四键**：它是只读/观测线（同 `p2-watch` / `p4-pitfall-write` 同族口径），
@@ -185,14 +185,14 @@ export const MODULE_IDS = {
   //   ⚠️ 与 job 开关的关系：`job off steward` 停调度、`module off steward` 停模块位 —— 两者都开才能跑，
   //     但本件**不自查模块门**（只读件不该因为一个开关位而静默不跑），模块位管的是"呈现 + 可关性"。
   'steward': {
-    label: '统筹线·脑子（读产物→排序→算收敛线→写流水账 · 零 token · 不叫停不建卡）', owner: null, baseline: true,
+    label: '协调线·脑子（读产物→排序→算收敛线→写流水账 · 零 token · 不叫停不建卡）', owner: null, baseline: true,
     note: '2026-11-02 上线：tickd job `steward` 每天 08:20；写者唯一 = 该 job（锁 `steward` 登记在 lib\\butler-locks.mjs）；'
       + '「嘴」会话只读不写；实现体 = tools\\dsh-butler\\steward.mjs',
-    noOwnerWhy: '已上线自治成员：统筹线脑子只读现成产物（standup / 看板 / 年轮 json）并只写自己那份流水账，'
+    noOwnerWhy: '已上线自治成员：协调线脑子只读现成产物（standup / 看板 / 年轮 json）并只写自己那份流水账，'
       + '**不做任何自动动作**（方案 §3.1 写死：不叫停、不砍线、不重派、不建卡、不验收、不发喊话）'
       + '⇒ 与四键（"自动执行闸"）不同族，不吃四键；仍吃 L0 降档 + 本行 L2 开关。',
   },
-  // ── 【2026-11-04 · 统筹线 P3「防偷偷缩目标」】`mainline-anchor`：锚检测的 L2 开关位 ──────────
+  // ── 【2026-11-04 · 协调线 P3「防偷偷缩目标」】`mainline-anchor`：锚检测的 L2 开关位 ──────────
   //   语义 = tickd job `mainline-anchor` 每 2 分钟读「年轮锚 + 上一份快照」，判「锚被动过 / 没推进 /
   //     两机各一份」三档，落 `_archive\anchor-snapshots\` 与 `docs/`。
   //   `owner: null` = **不吃四键**：它是纯观察线（同 `p2-watch` / `p4-pitfall-write` / `steward` 同族），
@@ -641,7 +641,7 @@ export function setJobEnabled(id, enabled, opts = {}) {
 }
 
 /** job 开关总览（CLI / tickd --status 用）。knownJobIds 给了就把"没覆盖项的"也列出来。
- *  【2026-10-23 · stall-nudge】主线停滞提醒（工作日 08:30 · 微信真发）的**开关表唯一源 =**
+ *  【2026-10-23 · stall-nudge】主线停滞提醒（工作日 08:30 · 外部通道真发）的**开关表唯一源 =**
  *  `butler-tickd.mjs#JOBS`（本文件不维护第二份 job 清单；knownJobIds 由调用方从 JOBS 传入）。
  *  该 job 未声明 `defaultWhenUnset` ⇒ 缺覆盖项 = 开（the operator已拍「真发」）。
  *  【H4b】第三参 `declaredDefaults` = `{ <jobId>: boolean }`，每 job 的「缺覆盖项时默认值」

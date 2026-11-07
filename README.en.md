@@ -7,8 +7,30 @@
 >
 > **What it is not** — It ships **no job scripts**. All 78 jobs in the table stay **off** until you
 > explicitly enable one (otherwise a fresh install would spawn dozens of missing-script failures within
-> minutes). No reports, no dashboard, and **no alerting channels** (those are deliberately not part of
-> this release).
+> minutes). No dashboard, and **no alerting channels** of its own: 0.2.0 adds a **notifier injection
+> point** instead (see below).
+
+## 0.2.0 — report & patrol toolkit
+
+Six read-first commands: `butler-steward` (daily report), `butler-steward-threads` (thread data plane),
+`butler-steward-advice` (four-part advice), `butler-failure-classify` (five failure classes + drafts),
+`butler-progress-status` (progress table), `butler-stall-nudge` (stalled-mainline nudges).
+All default to read-only / dry-run.
+
+### Notifier injection point
+
+```js
+import { notify, setNotifier } from '@kira905/dsh-butler-engine/notify';
+setNotifier(async ({ level, title, body, dedupeKey }) => {
+  await myChannel.send({ level, title, body });
+  return { ok: true, msgid: 'x' };        // ok:true ⇒ delivered; false ⇒ caller treats it as retryable
+});
+await notify({ level: 'warn', title: 'job failed', body: '…', dedupeKey: 'job-1' });
+```
+
+With nothing injected it prints one line to stderr and returns `{ ok:false, error:'no-channel' }` —
+visible, but never pretending it was delivered. The channel gate is **off by default**
+(`<data root>/butler-alert.json#channels.alert`), and the same `dedupeKey` fires at most once per local day.
 
 ```powershell
 npm i -g @kira905/dsh-butler-engine

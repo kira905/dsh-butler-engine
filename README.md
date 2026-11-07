@@ -24,11 +24,45 @@
 
 > ### 它不附带什么（先看清楚，省得装完失望）
 >
-> 1. **作业脚本本身**。调度表里登记了 78 条作业（备份、巡检、归档、日报、扩缩容…），那些脚本是另一套东西，**不随这个包发布**。所以本包默认把**全部作业关掉**——否则一启动就是几十个"找不到脚本"的失败，几分钟刷满告警。
-> 2. **报表 / 面板 / 日报**。这里只有调度与放行，不产日报、不画面板。
-> 3. **「出事喊到人」的通道**。企业微信、语音播报这类**不随开源发布**（绑定账号与私人日程，整块无法脱敏）。
+> 1. **大多数作业脚本**。调度表里登记了 78 条作业（备份、巡检、归档、日报、扩缩容…），绝大部分脚本是另一套东西，**不随这个包发布**。所以本包默认把**全部作业关掉**——否则一启动就是几十个"找不到脚本"的失败，几分钟刷满告警。
+> 2. **面板 / 网页界面**。这里只有调度、放行、以及命令行工具，不画面板。
+> 3. **任何具体通知通道**。企业微信、微信、语音播报这类**不随开源发布**（绑定账号、设备与私人日程，整块脱敏不了）。取而代之是一个**注入点**（见下节）——你要发到哪，自己接一行代码。
 >
-> 所以你装到的是一台**调度器 + 闸门 + 账本**，不是一个会自己上班的管家。要它干活，得接自己的作业脚本——下面就是怎么接。
+> 所以你装到的是一台**调度器 + 闸门 + 账本 + 一组命令行工具**，不是一个会自己上班的管家。要它干活，得接自己的作业脚本与通道——下面就是怎么接。
+
+## 0.2.0 新增：日报与巡检（六个工具）
+
+这六个都能单独当命令跑，**默认只读 / dry-run**，看清楚再 `--apply`。
+
+| 命令 | 一句话 | 典型用法 |
+|---|---|---|
+| `butler-steward` | 把"今天该看什么"拼成一份报告（看板 / 进度 / 产物 / 待办） | `butler-steward --json` |
+| `butler-steward-threads` | 话题串数据面：建串 / 挂卡 / 订阅 / 扇出（纯数据，不调模型） | `butler-steward-threads --thread-new --title "第一本"` |
+| `butler-steward-advice` | 按「现象 → 判断 → 建议动作 → 依据」四段出建议 | `butler-steward-advice --card <卡id>` |
+| `butler-failure-classify` | 把失败分成五类，产草稿（不动账本） | `butler-failure-classify --days 30 --json` |
+| `butler-progress-status` | 读进度登记表，产「已落地 / 证据 / 还差什么」一页表 | `butler-progress-status --md` |
+| `butler-stall-nudge` | 主线停滞提醒：判四类停滞、出报告、按需推送 Top N | `butler-stall-nudge --days 3 --json` |
+
+### 通知注入点（"出事喊到人"那一块，交给你）
+
+包里**没有**任何通道实现，只有一个函数面：
+
+```js
+import { notify, setNotifier } from '@kira905/dsh-butler-engine/notify';
+
+// ① 接你自己的通道（邮件、IM、Webhook、桌面通知都行）
+setNotifier(async ({ level, title, body, dedupeKey }) => {
+  await myChannel.send({ level, title, body });
+  return { ok: true, msgid: 'whatever' };   // ok:true = 真发出去了；false ⇒ 调用方会当失败、可重试
+});
+
+// ② 业务侧只管"发什么"
+await notify({ level: 'warn', title: '卡跑挂了', body: '…', dedupeKey: 'card-123' });
+```
+
+不注入时：往 stderr 打一行 `[butler:notify] …`，返回值 `{ ok:false, error:'no-channel' }`——
+**看得见，但不假装发出去了**。开关默认关（`<数据根>/butler-alert.json` 里 `channels.alert`），
+同一 `dedupeKey` 同一本地日只真发一次。
 
 ## 怎么接自己的作业（三步）
 
@@ -83,15 +117,20 @@ butler-tickd --status
 3. **Windows 优先**：路径归一、junction 判定、`%TEMP%` 口径都按 Windows 写的；Linux/macOS 能跑但不是主要目标。
 4. **默认关是"缺键即关"**：显式放行才能跑；要恢复"缺键即开"的老语义（不推荐），设 `BUTLER_JOBS_DEFAULT=on`。
 5. **审计是本地文件**（按月 jsonl + 哈希链），没有中心化服务，也没有远端上报。
+6. **六个工具不知道你的目录长什么样**：文档目录 / 报告目录 / 工具树根分别认 `BUTLER_DOCS_DIR` / `BUTLER_REPORT_DIR` / `BUTLER_ROOT`，没配就按 `<home>/dsh/docs` 这类默认值走。主线名、判据表这类"你的家规"也不在包里 —— 先 `--help` 看一眼，再接线。
+7. **`butler-steward-threads` 没有 `--help`**（无参数或未知参数 ⇒ 直接打用法 + 退出码 2），这是它原本的 CLI 形态，不是坏掉。
 
 ## 目录结构
 
 ```
-src/dsh-butler/        调度内核（butler-tickd.mjs 是入口，lib/ 是同层模块）
-src/lib/               与上层工具共用的两件：生产树守卫、DSH home/工作区解析
-bin/butler-tickd.mjs   npm bin 包装层
-docs/架构一页.md        各模块职责一页看完
-test/smoke.mjs         装完自检：18 条（全用临时目录，不碰真实状态）
+src/dsh-butler/         调度内核 + 日报/巡检工具（butler-tickd.mjs 是调度入口，
+                        steward*.mjs / failure-classify / progress-status / stall-nudge 是工具入口）
+src/dsh-butler/lib/     同层模块：锁、审计、开关、状态读写…… 以及 lib/notify.mjs（通知注入点）
+src/lib/                与上层工具共用的几件：生产树守卫、DSH home/工作区解析、文档族判据
+bin/butler-tickd.mjs    npm bin 包装层
+docs/架构一页.md         各模块职责一页看完
+test/smoke.mjs          内核自检：18 条（全用临时目录，不碰真实状态）
+test/notify-seam.mjs    通知注入点自检：19 条（默认 no-op / 注入 / 去重 / 开关 / 六个入口）
 ```
 
 ## 许可

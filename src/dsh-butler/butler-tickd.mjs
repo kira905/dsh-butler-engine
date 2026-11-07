@@ -188,11 +188,11 @@ export const JOBS = [
   //   ⚠️ 与 queue 同节奏（1 分钟）但**独立 job**：好单独关、好观测；`--apply` 由本行给（脚本默认 dry-run）。
   { id: 'stuck-recovery', label: '卡死会话自愈链（提醒 / 重启事由 / 补注入）', intervalMs: 1 * MIN, initialMs: 45_000,
     script: 'butler-stuck-recovery.mjs', args: ['--apply'], dir: HERE },
-  // ── 家庭保姆 ⑤ · 日程提醒 job（2026-10-23 · 卡「日程 + 提醒」）────────────────────
+  // ── <mainline> ⑤ · 日程提醒 job（2026-10-23 · 卡「日程 + 提醒」）────────────────────
   //   语义 = 每 1 分钟扫 `~/.dsh/family-calendar/events.json`，找「未发且 remindAt <= now」的到点提醒，
   //     逐条落状态行到 `reminded.jsonl`（幂等键 = eventId + remindAt；方案 §5.6）。
   //   ⚠️ **本卡不发真消息**：脚本 `family-remind-tick.mjs` 的 selectChannel 缺省 = () => null ⇒
-  //     到点一律记 `undeliverable/no-transport`；真通道（微信/企微）属 ⑨ 卡，要the operator在场再接。
+  //     到点一律记 `undeliverable/no-transport`；真通道（外部通道/外部通道）属 ⑨ 卡，要the operator在场再接。
   //   🔴 订正注（2026-10-29 · N2 卡 · 只标注不改原文）：上面这条**已过期**。一期提醒链（N2）落地后：
   //     ① `selectChannel` 缺省按 `'wechat'`，不再是 `() => null`；
   //     ② **真发与否只由 `opts.send` 决定**：`opts.send` 缺省 ⇒ `undeliverable/no-transport`，CLI 只在
@@ -261,7 +261,7 @@ export const JOBS = [
     script: path.join(DSH, 'tools', 'mood-broadcast', 'broadcast.mjs'), args: [],
     dir: path.join(DSH, 'tools', 'mood-broadcast'),
     benignExitCodes: [3], benignExitLabel: 'state 读不到/读不懂（心情插件未初始化）⇒ 本轮让路；exit 9 污染 state 不在此列' },
-  // ── 统筹线 R1-6 · Router 守护与巡检（2026-11-02 · 卡「统筹线 R1-6」）────────────────────
+  // ── 协调线 R1-6 · Router 守护与巡检（2026-11-02 · 卡「协调线 R1-6」）────────────────────
   //   语义 = 每 30 分钟把 Router 那套「不该坏的东西」现读一遍：能自己拨回来就拨回来（记一行），
   //     拨不回来就报警一行。五项 = 置顶复位 / 归档保护 / 会话身份漂移 / Bot ready / cwd 还在
   //     （真源 `docs\方案-Router Session-20261102.md` §3 R1-6 行 · §4 R1/R2 · §6 R10）。
@@ -286,7 +286,7 @@ export const JOBS = [
     intervalMs: 30 * MIN, initialMs: 150_000,
     script: 'router-guard.mjs', args: ['--once', '--apply'], dir: HERE, budgetMs: 30_000,
     benignExitCodes: [3], benignExitLabel: 'workspace.json 与 prefs 两处都读不到（环境未就绪）⇒ 本轮让路' },
-  // ── 统筹线 · 年轮判据 A-3（2026-11-05 · 卡「Router 年轮 A1A3」）· Router 结论槽位每日机械收口 ──
+  // ── 协调线 · 年轮判据 A-3（2026-11-05 · 卡「Router 年轮 A1A3」）· Router 结论槽位每日机械收口 ──
   //   判据原文（`docs/` A-3 · 逐字）：「每条在跑的主线**都有一行结论**在槽位里（不是只记 4 条）」
   //   语义 = 每天 22:10 把**每条「有活的主线」**各写一行结论进 `docs/`：
   //     取该线最近一张 **done 卡**的标题（≤120 显示宽）+ 卡 id 作 ref；没有 done 卡的线退化成
@@ -300,7 +300,7 @@ export const JOBS = [
   //   budgetMs 120s：一轮 = 一次看板 GET + 最多 16 次追加（实测秒级）。
   { id: 'router-digest', label: 'Router 结论槽位每日收口（零模型 · 每线一行）', at: '22:10', initialMs: 0,
     script: 'router-act.mjs', args: ['digest', '--auto', '--apply'], dir: HERE, budgetMs: 120_000 },
-  // ── 统筹线 · Router「静默收信」的唤醒端（2026-11-06 · 卡「Router 静默收信」· 方案 §4.7-1）──
+  // ── 协调线 · Router「静默收信」的唤醒端（2026-11-06 · 卡「Router 静默收信」· 方案 §4.7-1）──
   //   语义 = 每 5 分钟判一次"有没有没认领的静默来信"，有就投**一条**唤醒（正文「静默批 · 未认领 N 条」）；
   //     没信 ⇒ 零动作、零成本；六条闸全在脚本里（`.off` / 无未认领 / 额度 / Router 在跑 / 归档换棒 / 其余投）。
   //   ⚠️ 默认**开**（缺键 = 开）；关回 = `butler-autonomy-cli.mjs job off router-inbox-flush --reason "…"`。
@@ -350,10 +350,10 @@ export const JOBS = [
   //      放行 = `node tools\dsh-butler\butler-autonomy-cli.mjs job on secretary-morning --reason "..."`（**只改开关不改代码**）；
   //      开跑前还须确认闸文件 `~/.dsh/butler-secretary.json#switches.push` 为 true（出口每次先读它）。
   //   ⚠️ 出口唯一：本 job 只调 `secretary-morning.mjs`（取数），真正发送/闸门/预算/台账全在 `tools\secretary-notify.mjs`。
-  { id: 'secretary-morning', label: '服务面早报（企微推送 · 默认关）', at: '09:05', initialMs: 0,
+  { id: 'secretary-morning', label: '服务面早报（外部通道推送 · 默认关）', at: '09:05', initialMs: 0,
     script: 'secretary-morning.mjs', args: [], dir: HERE },
-  // ── 2026-11-02（卡 6f121702「统筹线·脑子」steward.mjs 甲层）：`steward` ──────────────────────
-  //   语义 = 统筹线的「**脑子**」甲层：读现成产物（看板 / `standup.mjs` 晨报 / 两份年轮 json）→
+  // ── 2026-11-02（卡 6f121702「协调线·脑子」steward.mjs 甲层）：`steward` ──────────────────────
+  //   语义 = 协调线的「**脑子**」甲层：读现成产物（看板 / `standup.mjs` 晨报 / 两份年轮 json）→
   //     按方案 §4.1 四条排序（failed 优先 → ageDays 倒序 → 可恢复性 → id 字典序）→
   //     出「**上桌** ≤3 件 + **收敛线** 总数」→ 写 `~/.dsh/steward-state.json`（幂等键 `sha16(卡id|动作|日期)`）。
   //   **零模型调用、零 token**（方案 §1.1 甲层）；乙层"把候选写成背景/选项/建议/代价"是另一张卡，
@@ -368,18 +368,18 @@ export const JOBS = [
   //   ⚠️ 退出码：0 = 正常（含"锁被占 ⇒ 本轮跳过"）；3 = 硬输入读不到（账本 / 晨报）⇒ 照旧记 failures 让人看见。
   //   ⚠️ 跨机：代码同步到对端后那边也会各跑一份（state 不跨机，方案 §1.4 第一版单机）⇒ **同步前**先在对端
   //     `butler-autonomy-cli.mjs job off steward --reason "对端不跑"`（同 stall-nudge / preset-drift 先例）。
-  { id: 'steward', label: '统筹线脑子（只读产物→写账 · 零 token）', at: '08:20', initialMs: 0,
+  { id: 'steward', label: '协调线脑子（只读产物→写账 · 零 token）', at: '08:20', initialMs: 0,
     script: 'steward.mjs', args: [], dir: HERE, budgetMs: 180_000 },
-  // 【主线停滞提醒 v1 · 2026-10-23 · 卡「butler·主动推进」】工作日 08:30 真发微信。
+  // 【主线停滞提醒 v1 · 2026-10-23 · 卡「butler·主动推进」】工作日 08:30 真发外部通道。
   //   为什么：现有 job 都在管**卡**（queue / card-watchdog / 失败通知），没有一个在看
   //   「**主线**是不是停摆了」—— 交接档写完也没人读它的 §5「下一步」。
   //   the operator 2026-10-23 11:05 原话：「很多主线做着做着我就忘了推进了，其实这些事才是应该你主动来找我的。」
   //   形态 = `at:'08:30' + days:[MON..FRI]`（多星期形态，按 lastDay 去重；周末不跑）。
-  //   参数 = `--apply --push`：写 `docs/`（**全部候选**）+ Top 3 真发微信。
+  //   参数 = `--apply --push`：写 `docs/`（**全部候选**）+ Top 3 真发外部通道。
   //   三道闸（同日一次 / Top N / 同 key 24h）全在 `stall-nudge.mjs` 内；job 本身不重试。
   //   ⚠️ 跨机：代码同步到 <host> 后，两侧 08:30 会各推一次（state 不跨机）⇒ **同步前**先在对端
   //      `butler-autonomy-cli.mjs job off stall-nudge --reason "对端不推"`（本机保持开）。
-  { id: 'stall-nudge', label: '主线停滞提醒（工作日 08:30 · 微信）', at: '08:30', initialMs: 0,
+  { id: 'stall-nudge', label: '主线停滞提醒（工作日 08:30 · 外部通道）', at: '08:30', initialMs: 0,
     days: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
     script: 'stall-nudge.mjs', args: ['--apply', '--push'], dir: HERE, budgetMs: 120_000 },
   // 卡 [8] P7 会照应：跨载体对账（耦合 / 落地缺口 / 脱管任务）。
@@ -398,14 +398,14 @@ export const JOBS = [
   { id: 'upstream', label: '官方上游动态', at: '09:20', initialMs: 0,
     script: path.join(DSH, 'tools', 'dsh-upstream-watch.mjs'),
     args: ['--report-dir', path.join(DSH, 'docs', 'report-dir')], dir: path.join(DSH, 'tools') },
-  // 微信官方 SDK 版本盯梢（2026-10-30 · the operator 17:20 拍板「发图暂缓，盯着 SDK 更新」）：
-  //   为什么：微信腿（iLink）下行 CDN 要第二个参数 `encrypted_param`，而官方 SDK 2.4.10 仍是单参数
+  // 外部通道官方 SDK 版本盯梢（2026-10-30 · the operator 17:20 拍板「发图暂缓，盯着 SDK 更新」）：
+  //   为什么：外部通道腿（iLink）下行 CDN 要第二个参数 `encrypted_param`，而官方 SDK 2.4.10 仍是单参数
   //   （服务端先改、SDK 没跟）⇒ 「发二维码图片」暂缓。官方哪天发新版 ⇒ 脚本写一条 info 告警喊人回来看。
   //   纯只读 + 零 token + 零依赖；状态 `~/.dsh/wechat-sdk-watch-state.json`，同一版本只喊一次（幂等）。
   //   **绝不自动升级**（脚本只"看"，不装包）；网络失败打印一句 + exit 0（不刷告警）。
   //   10:10 落在早晨巡检链（09:00→09:40）之后、与其余表位不撞车。
   //   真源 docs/ / docs/
-  { id: 'wechat-sdk-watch', label: '微信官方SDK版本盯梢', at: '10:10', initialMs: 0,
+  { id: 'wechat-sdk-watch', label: '外部通道官方SDK版本盯梢', at: '10:10', initialMs: 0,
     script: path.join(DSH, 'tools', 'wechat-bridge', 'watch-official-sdk.mjs'),
     args: [], dir: path.join(DSH, 'tools', 'wechat-bridge') },
   // 升级巡检（2026-09-15 · 卡 S8「升级分级授权·A3」②：重建「DSH 版本体检」/「Adapter 生态跟踪」的载体）
@@ -882,7 +882,7 @@ export const JOBS = [
     defaultWhenUnset: 'off',
     benignExitCodes: [3], benignExitLabel: '对端（<host> 生活实例）不可达/无通道 ⇒ 本轮让路（她那边开机/进网后自动收敛）' },
 
-  // ── 2026-11-06（卡「家庭保姆 · family 向量同步 job」· 方案 `docs/`）──
+  // ── 2026-11-06（卡「<mainline> · family 向量同步 job」· 方案 `docs/`）──
   //   家人库（`~\.dsh\family-memory\memory-family-<key>.db`）的**向量增量补齐**：读台账 → 逐库串行调现成执行体
   //   （`family-vectors-tick.mjs` 是薄包装，零改既有执行体 / 零改 dsh-memory 插件 / 零碰the operator库）。
   //   ⚠️ **默认关（不写死）**：`defaultWhenUnset:'off'` —— 源码**绝不写** `enabled:false`（写死 = hardDisabled，
@@ -1258,7 +1258,7 @@ export const JOBS = [
   //   ⚠️ **它不是投喂写入**：`reconcile` 只做三面引用对账（条 ↔ 实体 ↔ 记忆条），
   //     唯一写入 = 自家状态文件 `~/.dsh/secretary-feed-reconcile.json`；
   //     **投喂写面（落盘 + 记忆条）仍由 `switches.feed` 关着**（新写入面默认关，且当前
-  //     宿主根本没有投喂入口 —— 企微长连接 / 浏览器上传属 L-2 / L-4，未落地）。
+  //     宿主根本没有投喂入口 —— 外部通道长连接 / 浏览器上传属 L-2 / L-4，未落地）。
   //   ⚠️ **退出码 3 = 对账发现半完成态**（不是环境语义）⇒ **不当 benign**：它就是要红出来让人看见。
   //   ⚠️ **关回（甲档·下一轮 loop 即生效）**：
   //     `node tools\dsh-butler\butler-autonomy-cli.mjs job off secretary-feed --reason "…"`。
@@ -1502,7 +1502,7 @@ export const JOBS = [
   //       去程（→对端）新增 1 份（`card-no-ask/preset.yml`）· 跳过 4（peer-newer 2 / same-content 2）·
   //       **更新 0 · 冲突 0**；回程（对端→本机）拉取 11 份 / 0.16 MB · 跳过 2（same-content）·
   //       **更新 0 · 冲突 0** ⇒ 只增不覆盖。
-  //       🔴 跨线注意：对端 `.agent-presets` 归**<mainline>线 / 家庭保姆线**。若将来摘要里出现
+  //       🔴 跨线注意：对端 `.agent-presets` 归**<mainline>线 / <mainline>线**。若将来摘要里出现
   //         `presets：更新 N 份`（= 真覆盖了对端）⇒ 先 `butler-autonomy-cli.mjs job off text-sync-direct`
   //         停手，找the operator判是否上双写保护（`--dual-write`）—— **别自己拍**。
   //     · `--max-batch-bytes 8388608` —— 批 1 实测：单批按默认 32 MB 走隧道会 `scp: Broken pipe`（rc=255），
@@ -1581,10 +1581,10 @@ export const JOBS = [
     script: path.join(DSH, 'tools', 'dsh-butler', 'tickd-inspect-15m.mjs'),
     dir: path.join(DSH, 'tools', 'dsh-butler'), budgetMs: 300_000 },
   // ── 2026-10-28（V3 功能面 · **真源 = 本卡 / 报告 `docs/`**）──
-  //   为什么要有它：the operator**不看企微告警**（原话「现在企微那边的告警我都不咋看了」），而
+  //   为什么要有它：the operator**不看外部通道告警**（原话「现在外部通道那边的告警我都不咋看了」），而
   //     `~\.dsh\butler-alert.log` 已积 **9,328 条 / 5.7 MB**、多数是「job 耗时超预算」这类 info
   //     ⇒ **告警量本身就是它失效的原因**。于是只开一条**窄口子**：
-  //     **文档直连同步真的断了才发一条微信**，通了再发一条「已恢复」。
+  //     **文档直连同步真的断了才发一条外部通道**，通了再发一条「已恢复」。
   //   脚本 `tools\dsh-butler\notify-docsync-watch.mjs`（**缺省 dry-run**，这里显式 `--apply`）：
   //     · 判「断」= **三条同时满足**：源 job `lastStatus==='deferred'` ·
   //       `consecutiveBenign >= 6`（6 轮 × 60 分钟 ≈ 6 小时）· `lastStartAt` 距今 **< 2 个周期**（120 分钟）。
@@ -1595,7 +1595,7 @@ export const JOBS = [
   //     · 幂等与频率：状态文件 `~\.dsh\notify-docsync-state.json` 记 lastNotified / day / dayCount，
   //       **同一个状态不重发**；每天最多 2 条（1 条 down + 1 条 up）。
   //   🔴 **刻意不注册 `lib\alert.mjs` 的 `addChannel()`**、不改 `alert.mjs` 的既有行为与既有通道 ——
-  //     那等于给全部告警加微信通道，洪水立刻回来。本 job 是**唯一的窄出口**。
+  //     那等于给全部告警加外部通道通道，洪水立刻回来。本 job 是**唯一的窄出口**。
   //   🔴 配置 `~\.dsh\notify-docsync.json` 里 `enabled:false` **一条即停**（脚本每个入口先读它）。
   //   ⚠️ `benignExitCodes:[3]`：脚本让路码 = **tickd state 读不到或坏** ⇒ 本轮不判定、不涨 failures
   //     （那属于 tickd/机器层的问题，既有告警与守护鱼会管，不归本件）。
@@ -1603,7 +1603,7 @@ export const JOBS = [
   //     刻意不写 `defaultWhenUnset`。关回两条：`butler-autonomy-cli.mjs job off notify-docsync`（彻底）
   //     / 配置 `enabled:false`（立刻生效、不必重启）。
   //   🔴 **锁登记已同步**加在 `lib\butler-locks.mjs` 的 LOCK_REGISTRY（`notify-docsync`，**加了
-  //     `lockRunner: true`** —— 脚本自己**不**抢锁，由包装层抢；它会真发微信，
+  //     `lockRunner: true`** —— 脚本自己**不**抢锁，由包装层抢；它会真发外部通道，
   //     两个实例并发 = 同一天同一状态双发）。
   //   ⚠️ **必须重启 tickd 常驻进程才生效**（JOBS 是模块级 const）：`--stop` + `--ensure`。**只重启 tickd，不重启 dsh**。
   //   intervalMs 30 分钟 —— 比源 job（`text-sync-direct` 60 分钟）更密：「恢复」要尽快报出来；
@@ -1613,7 +1613,7 @@ export const JOBS = [
   //       1_050_000 **零撞车**（对 42 条逐个复核，同余冲突 **0**）；
   //       与**同周期（30 min）**最近者（`snapshot` 745_000）间隔 **305 s**（> 120 s 间距纪律）；
   //       接**末位**：现序列末位 = `text-sync-direct` 1_000_000 ⇒ 差 **50 s** ≥ 40 s（照 relay-keepalive 定下的间距）。
-  //   budgetMs 60_000：一轮 = 读两个 JSON（tickd state ≈130 KB）+ 至多一次微信发送
+  //   budgetMs 60_000：一轮 = 读两个 JSON（tickd state ≈130 KB）+ 至多一次外部通道发送
   //     （`cli.mjs send` 内部超时 15 s、本件 spawnSync 上限 60 s）⇒ 常态化 < 1 s；
   //     60 s 覆盖慢网/慢盘，又不至于把真卡死吞掉。
   { id: 'notify-docsync', label: '文档同步断链告警（窄口子 · 30 分钟）',
@@ -1622,7 +1622,7 @@ export const JOBS = [
     args: ['--apply'],
     dir: path.join(DSH, 'tools', 'dsh-butler'), budgetMs: 60_000,
     benignExitCodes: [3], benignExitLabel: 'tickd state 读不到或坏 ⇒ 本轮不判定（让路）' },
-  // ── 2026-10-30（家庭保姆 · 46-B「outbox 超时告警」· 真源 = `docs/`）
+  // ── 2026-10-30（<mainline> · 46-B「outbox 超时告警」· 真源 = `docs/`）
   //   为什么要有它：2026-10-28 清掉 12 个「算完从没人取走」的孤儿结果（10-12 ~ 10-27 陆续攒的）
   //     —— 它们就躺在 `<butler-root>-mailbox\qrog\outbox` 里，此前**没有任何人 / 任何 job 会发现**。
   //     the operator当场同意加常检：outbox 压着超 15 分钟的结果，就得有人知道。
@@ -1630,8 +1630,8 @@ export const JOBS = [
   //     · `tools\mailbox\outbox-stale-check.mjs` = **纯只读判定**（rc 0 正常 / 3 超时 / 2 用法 / 4 读不到仓；
   //       一个字节都不写，绝不删/搬/commit/push）
   //     · 本 job 跑的是 `tools\mailbox\outbox-stale-tick.mjs` = **策略层**（去重 + 送达）
-  //   送达链（args 显式 `--apply` 才真发）：① `hub-ctl push`（企微长连接 · 只发the operator单聊）
-  //     → ② the operator本人微信直发（与 `notify-docsync` 同一个口子、同一个人）→ ③ 会话通知 + 当日段文件
+  //   送达链（args 显式 `--apply` 才真发）：① `hub-ctl push`（外部通道长连接 · 只发the operator单聊）
+  //     → ② the operator本人外部通道直发（与 `notify-docsync` 同一个口子、同一个人）→ ③ 会话通知 + 当日段文件
   //     （`butler-alert.log` 一行 + 桌宠 `/whale/say` + `docs/`）。
   //   ⚠️ **只发the operator本人**；🔴 绝不发家人（不读写家人库、不走家人通道）。
   //   ⚠️ 去重：同一文件名 TTL（默认 6 小时）内只喊一次，每天最多 6 条
@@ -1645,14 +1645,14 @@ export const JOBS = [
   //     静态算既有 42 个周期型 job（`docs/`）⇒ 55_000 **零同余**；
   //     同周期最近邻居 = `tickd-inspect-15m` 110_000，间隔 55 s（> 40 s 间距纪律）。
   //   budgetMs 90_000：一轮 = 每文件一次 `git log`（实测单次 ≈ 30 ms）+ 至多一次送达
-  //     （hub push / 微信 send 各自 spawnSync 上限 60 s）⇒ 常态 < 3 s。
+  //     （hub push / 外部通道 send 各自 spawnSync 上限 60 s）⇒ 常态 < 3 s。
   //   ⚠️ 必须 `--stop` + `--ensure` 才生效（JOBS 是模块级 const）；**只重启 tickd，不重启 dsh**。
   { id: 'outbox-stale', label: '仓信箱 outbox 超时告警（只读判定 + 只喊the operator · 15 分钟）',
     intervalMs: 15 * MIN, initialMs: 55_000,
     script: path.join(DSH, 'tools', 'mailbox', 'outbox-stale-tick.mjs'),
     args: ['--apply'],
     dir: path.join(DSH, 'tools', 'mailbox'), budgetMs: 90_000 },
-  // ── 2026-11-04（统筹线 P2「B 路扫描」）：`mainline-scan` ────────────────────────────────
+  // ── 2026-11-04（协调线 P2「B 路扫描」）：`mainline-scan` ────────────────────────────────
   //   真源 = `docs/` §6.2「新 job 怎么登记」①。
   //   干什么：每 2 分钟扫一遍「本线 sid 集」里的会话日志，把**漏记的轮次**补成 `phase:"scan-fill"`
   //     的一行（`by:"scan"`、行内 `turn := forTurn`、`atTurn` = 该轮 `turn/end.time`），
@@ -1680,7 +1680,7 @@ export const JOBS = [
     intervalMs: 2 * MIN, initialMs: 90_000,
     script: 'ledger-scan.mjs', args: ['--apply'], dir: HERE, budgetMs: 110_000,
     defaultWhenUnset: 'off' },
-  // ── 2026-11-04（统筹线 P3「防偷偷缩目标」）：`mainline-anchor` ─────────────────────────────
+  // ── 2026-11-04（协调线 P3「防偷偷缩目标」）：`mainline-anchor` ─────────────────────────────
   //   真源 = `docs/` §8.3 / §8.4 ③（D-1 由the operator 2026-11-04 01:47 拍「②+③」）。
   //   干什么：每 2 分钟跑一遍 `anchor-watch.mjs` —— ① 现算档 A 名单（在途 ≥1 ∧ 近 7 天有流水）
   //     ② 逐线读 `docs/` 与**上一份快照**比，判「锚被动过」（anchor-shrunk）

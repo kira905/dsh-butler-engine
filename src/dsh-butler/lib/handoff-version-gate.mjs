@@ -446,7 +446,7 @@ export function renderVersionReport(cmp, opts = {}) {
 //       绝不进入维护窗口/批量决策分支。（本卡已在 tickd 侧做了同一判定，双保险。）
 //
 // §3 触发源互斥 + drain 语义（§5.3 第 6 条）
-//     - 四类触发（开机钩 Arrive / 关机钩 Depart / 热采 tick / 企微远程）共用 `tick-handoff.lock`；
+//     - 四类触发（开机钩 Arrive / 关机钩 Depart / 热采 tick / 外部通道远程）共用 `tick-handoff.lock`；
 //     - 关机钩撞热采 → 等其结束（上限 = 剩余预算），**不许并发**；
 //     - ⚠️ drain 需要"等待"能力，本卡只交付判定；`acquireTickLock` 当前 waitMs=0（不排队），
 //       H1b 若需要等待式获取，应新增 `acquireTickLockWait()` 而不是改 `acquireTickLock` 的默认语义。

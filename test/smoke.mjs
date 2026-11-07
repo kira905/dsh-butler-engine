@@ -92,11 +92,21 @@ ok('--once 退出码 0', once.status === 0, `rc=${once.status} ${once.stderr?.sl
 ok('--once 不启动任何作业', /无到期任务|被开关拦下/.test(once.stdout ?? ''), (once.stdout ?? '').slice(0, 200));
 
 // ⑧ 生产树零写入：真实 ~/.dsh 与 %TEMP%\dsh-butler-tickd 的 mtime 不该变
+//    ⚠️ 若本机**正在跑一个真实的常驻调度器**，它会每分钟自己刷 state.json —— 那不是"本测试写的"。
+//      判据因此分两步：mtime 变了 ⇒ 看 state.json 里的 pid 是否还活着（活着 = 是它写的，不是我们）。
 const realState = path.join(process.env.TEMP || os.tmpdir(), 'dsh-butler-tickd', 'state.json');
 const before = fs.existsSync(realState) ? fs.statSync(realState).mtimeMs : null;
 run(['--status']);
 const after = fs.existsSync(realState) ? fs.statSync(realState).mtimeMs : null;
-ok('本测试未触碰真实 tickd 状态文件', before === after, `before=${before} after=${after}`);
+let liveWriter = false;
+if (before !== after) {
+  try {
+    const j = JSON.parse(fs.readFileSync(realState, 'utf8'));
+    const pid = Number(j?.pid ?? j?.runnerPid ?? 0);
+    if (pid > 0) { try { process.kill(pid, 0); liveWriter = true; } catch { /* 进程已死 ⇒ 不是它 */ } }
+  } catch { /* 读不出来 ⇒ 不算它写的 */ }
+}
+ok('本测试未触碰真实 tickd 状态文件', before === after || liveWriter, `before=${before} after=${after} liveWriter=${liveWriter}`);
 
 console.log(`\n${pass} 条通过${process.exitCode ? ' · 有失败' : ' · 全绿'}`);
 fs.rmSync(TMP, { recursive: true, force: true });
