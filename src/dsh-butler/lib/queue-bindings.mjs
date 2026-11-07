@@ -31,7 +31,7 @@ import { readJson, updateJson, acquireRmwLock, writeJsonAtomic } from './store.m
 export const BINDINGS_VERSION = '0.1.0';
 export const BINDINGS_SCHEMA = 1;
 export const BINDINGS_NAME = 'queue-bindings.json';
-/** 合法来源：manual（the operator/主人手登记）· panel（面板）· cron（无会话身份的调度，**显式声明无主**）。 */
+/** 合法来源：manual（操作者/主人手登记）· panel（面板）· cron（无会话身份的调度，**显式声明无主**）。 */
 export const BINDING_SOURCES = ['manual', 'panel', 'cron'];
 /** 表规模上限（超出按 boundAt 淘汰最旧；防无限增长）。 */
 export const MAX_CARDS = 500;

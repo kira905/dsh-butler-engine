@@ -8,9 +8,9 @@
 //   ② 产品版本文件多写一个 `roster`（v2 §5.1 的「8 个组件」= 8 条能力域，见 PRODUCT_ROSTER）；
 //   ③ 自检读数新增 `unmanagedCount` / `mismatchCount` / `roster`（口径见 selfCheck）。
 //   ⚠️ 产品版本号本身**没动**（仍是 0.1.0）：动它要连带改两个 npm 包版本 + verify.mjs 的不变量，
-//      属独立变更、须the operator拍板 —— 建议与理由见交付报告 §版本建议。
+//      属独立变更、须操作者拍板 —— 建议与理由见交付报告 §版本建议。
 //
-// 不匹配处置（the operator 2026-09-09 拍板 · v2.3 修订）：
+// 不匹配处置（操作者 2026-09-09 拍板 · v2.3 修订）：
 //   **跳过该组件、其余照常启动 + 告警**（不是"拒绝启动整套"）。
 //   告警通道必须独立于butler自身组件 → 走 lib/alert.mjs（写 butler-alert.log + stderr），
 //   不 import 面板 / host / 日报。
@@ -35,7 +35,7 @@ export const COMPONENT_VERSIONS = {
   'butler-audit-cli': '0.1.0',
   // 0.1.0 保持不变（verify.mjs 要求「登记表组件版本全部 == 产品版本」）：
   // 2026-09-11 卡 [Q4] 修的是 butler-restart-coordinator 的活跃判据（多源并集 + mtime-in-future），
-  // 属实现内修复、不动版本号；要单独 bump 必须先改 verify.mjs 那条规范并经the operator拍板。
+  // 属实现内修复、不动版本号；要单独 bump 必须先改 verify.mjs 那条规范并经操作者拍板。
   'butler-restart-coordinator': '0.1.0',
   // 卡 [2a] P4：坑库扫描 + 签名聚类 + 阶梯升级（含 pitfall-tick.mjs 入口）
   'butler-pitfall': '0.1.0',
@@ -77,7 +77,7 @@ export const COMPONENT_VERSIONS = {
 //   2. `fallback` = 代码**声明的期望值**（写进 butler-version.json 的就是它）；
 //      自检拿「实体真值 vs 声明值」比 ⇒ 实体升版而声明没跟 ⇒ version-mismatch（这才是想要的信号）。
 //   3. 产品版本号（PRODUCT_VERSION）本次**保持不变**；统一升版（含两个包 npm 版本 + 上面那条不变量）
-//      属独立变更、须the operator拍板 —— 见 `docs/` §版本建议。
+//      属独立变更、须操作者拍板 —— 见 `docs/` §版本建议。
 // ─────────────────────────────────────────────────────────────────────────────
 export const PLUGIN_COMPONENTS = {
   'butler-host': {
@@ -276,7 +276,7 @@ export function selfCheck(opts = {}) {
   // 【gap-1-17 · 2026-10-10 卡「冲刺600·补核心库」】方案 §5.1 版本不匹配处置**第 4 步**：
   //   · **日报红项**：数据源 = 此处的 `redLines`（渲染侧统一读它，别各写一套判据）；
   //   · **告警**：只在不匹配时写（正常态零噪音），走独立通道 lib/alert.mjs（不依赖面板 / 日报）；
-  //   · **降档联动**：只给**建议**、不自动执行（见 `suggestDegradeOnMismatch`）——自动降档 = 改自治行为，归the operator。
+  //   · **降档联动**：只给**建议**、不自动执行（见 `suggestDegradeOnMismatch`）——自动降档 = 改自治行为，归操作者。
   const mismatchRows = rows.filter((r) => r.reason === 'version-mismatch');
   const redLines = mismatchRows.length
     ? [`🔴 组件版本不匹配 ${mismatchRows.length} 项：${mismatchRows.map((r) => `${r.name}（实体 ${r.myVersion} / 产品登记 ${r.registered}）`).join('；')}`]
@@ -327,7 +327,7 @@ export function versionRedLines(opts = {}) {
 /**
  * 「组件不匹配 ⇒ 是否该联动 L0 降档」的**建议**（gap-1-17 · **只给建议，绝不自动执行**）。
  *
- * 为什么不在本模块自动降档：降档会改**自治行为**（L0 降档期一切自动动作转通知），属the operator口径；
+ * 为什么不在本模块自动降档：降档会改**自治行为**（L0 降档期一切自动动作转通知），属操作者口径；
  * 且 `lib/version.mjs` 是低层模块，反向 import `lib/autonomy-state.mjs` 会造成环依赖。
  * 调用方（人 / 上游链路）拿到 `suggested` 后自行决定是否 `degrade()`。
  * @param {{home?:string}} [opts]

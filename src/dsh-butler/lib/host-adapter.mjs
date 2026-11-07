@@ -448,7 +448,7 @@ export function eventLabel(type) {
   switch (type) {
     case 'session': return '会话头';
     case EV.USER_MESSAGE: return '主人消息';
-    case EV.ASSISTANT_MESSAGE: return 'the operator回复';
+    case EV.ASSISTANT_MESSAGE: return '操作者回复';
     case EV.TOOL_CALL: return '工具调用';
     case EV.TOOL_RESULT: return '工具结果';
     case EV.PERMISSION_PRESET: return '权限预设';

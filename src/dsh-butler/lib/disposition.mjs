@@ -284,6 +284,6 @@ export function attentionRequestFor(row, { title = '' } = {}) {
   return {
     cardId,
     question: `卡「${name}」报 blocked${why ? `（${why}）` : ''}—— 谁接手？`,
-    options: ['the operator接着干', '等主人', '先放着'],
+    options: ['操作者接着干', '等主人', '先放着'],
   };
 }

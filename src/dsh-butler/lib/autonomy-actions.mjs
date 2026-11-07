@@ -297,7 +297,7 @@ export const AUTO_ACTION_KINDS = {
     guard: { maxAffected: null, allowBatch: false },
   },
   'family-answer': {
-    level: 'L1', label: '家人问答（the operator这条链；按人记账）', reversible: true,
+    level: 'L1', label: '家人问答（操作者这条链；按人记账）', reversible: true,
     moduleId: 'p2-watch', moduleKind: 'family',
     familyWhy: '同上：额度走 service-pool（⑥ 包池子分摊）⇒ 挂 owner=null 模块',
     domain: 'service',

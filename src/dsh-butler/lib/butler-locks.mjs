@@ -3,7 +3,7 @@
 // 来源：docs/ §17.1 T2
 //   「把 butler-scheduler 单例锁扩到**全部 butler tick**（含既有 8 个计划任务）……
 //     RestartTick 在交接窗口内必须回 `busy`、不得拉起 DSH」
-//   口径拍板：2026-09-10 16:36 the operator采纳 T2（看板卡 S5·H1b + S5·H1b-prep）。
+//   口径拍板：2026-09-10 16:36 操作者采纳 T2（看板卡 S5·H1b + S5·H1b-prep）。
 //
 // 为什么需要"注册表"这一层：
 //   调度入口有**两套**（本机 <host>/<host> 已切常驻 butler-tickd.mjs；对端/<host> 仍可能用 Windows
@@ -67,7 +67,7 @@ export const LOCK_REGISTRY = [
     skipPolicy: 'skip', source: 'tickd',
     lockRunner: true, lockRunnerReason: '脚本自身无 acquireTickLock：手工 `--go` 直跑与 tickd 并发会同时写账本并同时调 repair-ctl finish' },
 
-  // 心情播报定时（2026-11-02 · 跨线派活：the operator<mainline>线 → butler线 · 判据 14-c 保新鲜 · 技术债 TD-35）
+  // 心情播报定时（2026-11-02 · 跨线派活：操作者<mainline>线 → butler线 · 判据 14-c 保新鲜 · 技术债 TD-35）
   //   脚本 `broadcast.mjs` **自身没有** acquireTickLock（独立小件，不 import butler 任何东西）
   //   ⇒ 按 repair-linger / watchfs 同款填 `lockRunner: true`（tickd 经 lib\tick-job-runner.mjs 包装层抢锁）。
   //   为什么必须加锁：它写唯一产物 `~/.dsh/feiyu-mood-broadcast/<机器名>.json`，且**有手工入口**
@@ -133,14 +133,14 @@ export const LOCK_REGISTRY = [
   //   否则 H1b-prep 建立的「tickd 全部 job 都有锁登记」不变量单测会红（2026-09-12 验收时实测抓到）。
   { job: 'reconcile', lockName: 'p7-reconcile', script: 'butler-reconcile.mjs', ttlMs: 600_000, intervalMs: 0,
     critical: ['butler-reconcile-state.json', 'butler-entities.json', 'docs/report-dir 的「💡 统筹提示」段（经 report.mjs）'], skipPolicy: 'skip', source: 'tickd' },
-  // 官方上游动态（2026-09-15 新增，the operator拍板「每天盯一次」）：每日 09:20 抓 deepseek-ai/deepseek-harness
+  // 官方上游动态（2026-09-15 新增，操作者拍板「每天盯一次」）：每日 09:20 抓 deepseek-ai/deepseek-harness
   //   的内容级增量（compare API 提交明细 / 热点 / 断裂面符号告警）。
   //   TTL 15 分钟：正常秒级，但慢网下 compare API 单次超时上限就有 25s，给足余量。
   //   脚本自带幂等（基线推进）+ 只读，抢不到锁静默跳过即可 —— 第二天照跑，不丢内容。
   { job: 'upstream', lockName: 'upstream', script: 'dsh-upstream-watch.mjs', ttlMs: 900_000, intervalMs: 0,
     critical: ['~/.dsh/upstream-watch-<host>.json（基线，按主机分文件）', 'docs/'],
     skipPolicy: 'skip', source: 'tickd' },
-  // 外部通道官方 SDK 版本盯梢（2026-10-30 · the operator 17:20 拍板）：每天 10:10 只读查 npm `latest`，
+  // 外部通道官方 SDK 版本盯梢（2026-10-30 · 操作者 17:20 拍板）：每天 10:10 只读查 npm `latest`，
   //   与基线 2.4.10 不同 ⇒ 写一条 info 告警（同一版本只喊一次）。脚本**不装包、不升级**。
   //   TTL 15 分钟：正常秒级；`--deep`（默认不启用）内含 npm pack，给足余量。
   //   脚本自带幂等（lastAlertedVersion）+ 只读，抢不到锁静默跳过即可 —— 第二天照跑，不丢结论。
@@ -162,7 +162,7 @@ export const LOCK_REGISTRY = [
   { job: 'weekly', lockName: 'weekly', script: 'dsh-butler-panel/report-weekly.mjs', ttlMs: 600_000, intervalMs: 0,
     critical: ['docs/'], skipPolicy: 'skip', source: 'both',
     lockRunner: true, lockRunnerReason: '脚本自身无锁：周报可被手工/tickd 双入口重写' },
-  // 冷备作业（**三 job 归并** · the operator 2026-10-13 16:12 拍板 #12/#13）：
+  // 冷备作业（**三 job 归并** · 操作者 2026-10-13 16:12 拍板 #12/#13）：
   //   一个 job 按序跑两件（回滚点打包 + 生图索引/镜像），两件**各自**解析冷备根、都不写死盘符 ——
   //   回滚点根见 tools/lib/rollback-points-root.mjs，生图根见 tools/lib/imagegen-backup-root.mjs。
   //   ⚠️ 归并前这里登记的是三条（imagegen / imagegen-full / rollback-offsite）—— 已随归并移除；
@@ -198,7 +198,7 @@ export const LOCK_REGISTRY = [
   //      2026-09-29 起由常驻 `butler-tickd.mjs` 唯一驱动 ⇒ 驱动入口类型 = 'tickd'。
   //   ② `intervalMs: 0` → `12 * 60 * 60 * 1000`：与 JOBS 的 `intervalMs: 12 * 60 * MIN` 和脚本自报的
   //      `INTERVAL_MS` 三者同值（0 = 日历/手工 的旧登记已失真，会误导 TTL 推导读者）。
-  //      **2026-09-29 the operator令「tidy 改 12 或者 24 小时放行」⇒ 6h → 12h**，四处同批改（本行 / JOBS /
+  //      **2026-09-29 操作者令「tidy 改 12 或者 24 小时放行」⇒ 6h → 12h**，四处同批改（本行 / JOBS /
   //      脚本常量 `INTERVAL_MS` / 单测断言）；机械守门 = `_test/test-tidy.mjs` ⑦ 段。
   //   ③ **刻意不填 `lockRunner`**（与 `memory-distill` / 四动作同款处置）：脚本自身就是
   //      `createScheduler({name:'tidy'})` 的执行体、自带 `acquireTickLock('tidy-audit')`
@@ -225,7 +225,7 @@ export const LOCK_REGISTRY = [
   { job: 'hot', lockName: 'handoff', script: 'hot-collect.mjs', ttlMs: 45 * 60 * 1000, intervalMs: 30 * 60 * 1000,
     critical: ['三仓工作副本（只读生产侧）', '看板账本走 Host API 导出', '会话<sync-repo>（只搬已闭合）'],
     skipPolicy: 'skip', source: 'tickd' },
-  // 跨机文本同步（2026-10-11 · 卡「文件同步」· the operator 01:11 令）——
+  // 跨机文本同步（2026-10-11 · 卡「文件同步」· 操作者 01:11 令）——
   //   **第四个共用 `handoff` 锁的入口**（前三个：hot-collect、memory-snapshot、handoff 本身）：
   //   本 job 写**<sync-repo> 与<sync-repo> 的同一个工作副本**（`.agent-presets` / `docs`）+ commit + push，
   //   并**回灌**生产（`~/.dsh/.agent-presets` / `<butler-root>\docs`）⇒ 与 hot 动的是同一批 git 对象，
@@ -252,7 +252,7 @@ export const LOCK_REGISTRY = [
       '生产 memory.db（**只读**：VACUUM INTO 到临时目录，本体绝不改）',
       '~/.dsh/butler-memory-snapshot.json（状态）+ butler-alert.log（失败/让路告警）'],
     skipPolicy: 'skip', source: 'tickd' },
-  // 会话异地镜像（2026-09-20 · the operator拍板「主推 <host>，<sync-repo> 瘦身」）——
+  // 会话异地镜像（2026-09-20 · 操作者拍板「主推 <host>，<sync-repo> 瘦身」）——
   //   把会话（活跃+归档）+ 附件实体增量镜像到 **<host> 本地盘**，与三仓工作副本**零交集**
   //   （它只读生产 `~/.dsh`、只写对端 `<butler-root>-session-mirror`）⇒ **独占新锁** `session-mirror`，
   //   刻意**不**与 `handoff` 共用：共用会让"每小时一次"的镜像被热采/交接长时间挡住。
@@ -429,7 +429,7 @@ export const LOCK_REGISTRY = [
     skipPolicy: 'skip', source: 'tickd',
     lockRunner: true, lockRunnerReason: '脚本自身无锁：可被手工直跑（node butler-memory-vectors-tick.mjs）与 tick 调度并发，共用同一份 state 与向量库' },
 
-  // ── 2026-10-11（卡「跨机记忆库每小时自动同步」· the operator 01:11 令）：`memory-sync` 接 tickd ────────
+  // ── 2026-10-11（卡「跨机记忆库每小时自动同步」· 操作者 01:11 令）：`memory-sync` 接 tickd ────────
   //   每小时一次跨机记忆库双向收敛（driver=<host> 取对端快照+合并+投递；follower=<host> 读 inbox+合并），
   //   合并完**紧接着**重建本机向量。
   //   ⚠️ **新增 job 必须同步登记锁**（不变量 = 「tickd 全部 job 都有锁登记」，由 `auditRegistry({jobs:JOBS})`
@@ -440,7 +440,7 @@ export const LOCK_REGISTRY = [
   //   TTL 30 分钟：一轮 = 取对端快照（lan 秒级 / 隧道秒级 / 短租 ~5s）+ 合并（1200 余条读 + 短事务写，
   //      秒级）+ 投递 scp（约 4 MB，秒级）+ 向量（增量秒级；**首次全量实测 626 条 / 102s**）⇒ 余量充足。
   //   ⚠️ **与 `memory-vectors` 的关系**：`memory-vectors` 每小时、`memory-sync` **自 A53 起 15 分钟**
-  //      （2026-10-26 the operator破例授权改一行；`intervalMs` 见 L374）；`initialMs` 仍刻意错开 180s（510s vs 690s）；
+  //      （2026-10-26 操作者破例授权改一行；`intervalMs` 见 L374）；`initialMs` 仍刻意错开 180s（510s vs 690s）；
   //      本 job 调向量时经包装层抢 `tick-memory-vectors.lock`（**同一把**）⇒ 那个 job 在跑就本轮跳过。
   { job: 'memory-sync', lockName: 'memory-sync', script: 'mem-sync-tick.mjs',
     ttlMs: 30 * 60 * 1000, intervalMs: 15 * 60 * 1000,
@@ -542,9 +542,9 @@ export const LOCK_REGISTRY = [
       '读 ~/.dsh/butler-relay.handed 与 ~/.dsh/butler-relay.json（只读：交接证据）',
       '写：docs/（**唯一的写**，只读档）'],
     skipPolicy: 'skip', source: 'tickd' },
-  // ── 2026-10-14（the operator令「都做吧」· 防复发三件套 ②）：`rule-drift` 老话巡检 ───────────────────
+  // ── 2026-10-14（操作者令「都做吧」· 防复发三件套 ②）：`rule-drift` 老话巡检 ───────────────────
   //   纯只读：扫 `~/.dsh/.agent-presets/<preset>/agent.cordis.yml` 的 persona 正文 + `~/.dsh/skills/<名字>/SKILL.md`，
-  //   命中"教会话先问the operator"的保守句式族就报（结论走 stdout / 日报段；`--json` 时日志落 %TEMP%）。
+  //   命中"教会话先问操作者"的保守句式族就报（结论走 stdout / 日报段；`--json` 时日志落 %TEMP%）。
   //   `lockRunner` **不加**：脚本自身不抢锁、不与手工直跑争互斥资源（纯读；同日两次跑最多重复报同一批命中）。
   //   TTL 5 分钟（一轮 = 读 3 份 persona + 25 份技能，实测 < 1 s）。
   //   ⚠️ 与 `butler-tickd.mjs` 的 JOBS 行同源（`at:'15:30'` · `defaultWhenUnset:'off'`）⇒ 改一处必须同批改另一处。
@@ -707,7 +707,7 @@ export const LOCK_REGISTRY = [
   //     `docs/`**）：
   //     「文档跨机同步真的断了才发一条外部通道」的窄口子告警件
   //     （脚本 `tools\dsh-butler\notify-docsync-watch.mjs`；JOBS 行见 `butler-tickd.mjs` 表尾）。
-  //     为什么有它：the operator**不看外部通道告警**（原话「现在外部通道那边的告警我都不咋看了」），而
+  //     为什么有它：操作者**不看外部通道告警**（原话「现在外部通道那边的告警我都不咋看了」），而
   //     `~\.dsh\butler-alert.log` 已积 **9,328 条 / 5.7 MB**、多数是「job 耗时超预算」这类 info
   //     ⇒ **告警量本身就是它失效的原因**。本件只盯 `text-sync-direct` 一件事：
   //     连续 ≥6 轮让路 **且** tickd 自己还活着 ⇒ 推一条；通了再推一条「已恢复」。
@@ -716,8 +716,8 @@ export const LOCK_REGISTRY = [
   //     🔴 **脚本自己不抢锁**（无 `acquireTickLock`；允许手工直跑：`--status` / 缺省 dry-run /
   //     `--apply`）⇒ 按 `relay-keepalive` / `lease-reclaim` / `watchfs` 同款先例走
   //     **`lockRunner: true`**（tickd 经 `lib\tick-job-runner.mjs` 包装层抢锁 → 动态 import → 释放）。
-  //     为什么必须互斥：它**会真发一条外部通道**给the operator。两个实例并发、又恰好在同一状态首次判定
-  //     ⇒ 双双读到 `lastNotified=null` ⇒ the operator收到两条一模一样的「断了」。
+  //     为什么必须互斥：它**会真发一条外部通道**给操作者。两个实例并发、又恰好在同一状态首次判定
+  //     ⇒ 双双读到 `lastNotified=null` ⇒ 操作者收到两条一模一样的「断了」。
   //     幂等闸（状态文件 `lastNotified`）能挡"同一状态重发"，但挡不住"同一瞬间的双发"。
   //     ⚠️ 与 `text-sync-direct` 是**只读关系**（只读 tickd `state.json` 的 `jobs['text-sync-direct']`；
   //     不读它的锁、不碰它搬的文件）⇒ 两把锁**刻意不共用**：共用会让 60 分钟一轮的文档同步
@@ -732,11 +732,11 @@ export const LOCK_REGISTRY = [
       '%TEMP%/dsh-butler-tickd/state.json（**只读**：`jobs[<jobId>]` 的三条判据 + runs）',
       '<butler-root>/logs/notify-docsync-<日期>.jsonl（**写**：每轮判定留痕，含 throttled / noop）',
       '~/.dsh/butler-alert.log（**仅发送失败时**写一行，走既有 `lib/alert.mjs`，不改其行为）',
-      '🔴 **真动作**：`tools\\wechat-bridge\\cli.mjs send --go` 真发一条外部通道 —— **只发给the operator自己**'
+      '🔴 **真动作**：`tools\\wechat-bridge\\cli.mjs send --go` 真发一条外部通道 —— **只发给操作者自己**'
         + '（配置文件里的 `to`），不发群、不加人、不广播'],
     skipPolicy: 'skip', source: 'tickd', lockRunner: true,
     lockRunnerReason: '脚本无 acquireTickLock 且允许手工直跑（--status / --apply）⇒ 必须由包装层抢锁，'
-      + '否则手工与 tick 并发会在同一瞬间双双读到 lastNotified=null ⇒ the operator收到两条一样的「断了」' },
+      + '否则手工与 tick 并发会在同一瞬间双双读到 lastNotified=null ⇒ 操作者收到两条一样的「断了」' },
   //   `lease-reclaim`（2026-10-14 · 卡「愿景实体核查 R11」）：短租租约**过期回收** job
   //     （真源 R9 报告 §3.4 / §8-R2 / §9-P1；调度行见 `butler-tickd.mjs` 的 JOBS 表尾）。
   //     脚本 `tools\peer-channel-reclaim-tick.mjs` 自身**没有** `acquireTickLock`（是独立工具，
@@ -864,7 +864,7 @@ export const LOCK_REGISTRY = [
   //   ⚠️ TTL 取 **300_000（5 分钟）= 登记前 `deriveTtlMs()` 对"无条目 job"的兜底值** ⇒
   //     `lockNameFor` / `deriveTtlMs` / `usesLockRunner` 三个运行时出口与本行加入前**逐值相同**
   //     （即：**加这一行对运行时零行为变化**，只是把"本来就生效的锁"写进真相表）。
-  //   ⚠️ **已知边界 → 已处置（2026-10-21 14:2x · 功能面接手第 1 棒 · the operator授「其他你自己拍板」）**：
+  //   ⚠️ **已知边界 → 已处置（2026-10-21 14:2x · 功能面接手第 1 棒 · 操作者授「其他你自己拍板」）**：
   //     实测最长一轮 **358,385 ms ≈ 6 分钟**（2026-10-21 00:28 撞 budget 240 s 的那轮：打包 + scp + 远端验包）
   //     > 原 300_000 ⇒ 那一轮里锁会过期。风险窗口 = 「手工 `--once` 与慢轮 tick 并发」。
   //     ⇒ **TTL 抬到 600_000（10 分钟）**，覆盖最长轮 + 余量；属行为变更（锁定释放变慢），
@@ -896,7 +896,7 @@ export const LOCK_REGISTRY = [
       '`docs/`（**写**：差异清单 + 分级；一份/天，覆盖写）',
       '**不自动改任何一侧**（下发与否由人拍）⇒ 无写远端面'],
     skipPolicy: 'skip', source: 'tickd' },
-  // ── 2026-10-23（主线「the operator<mainline>」卡①）：`preset-drift` ────────────────────────
+  // ── 2026-10-23（主线「操作者<mainline>」卡①）：`preset-drift` ────────────────────────
   //   每天 08:50 只读比一遍「本机 + 对端」每份 preset 的**目录版 ↔ patch 内联**（0.2.0 只认内联，
   //   改了目录忘重内联 = 白改且没人发现），报告落 `docs/`。
   //   ⚠️ 判据 = 脚本自身**没有** `acquireTickLock`（`tools\dsh-butler\preset-drift-tick.mjs` 包装层只 spawn
@@ -910,7 +910,7 @@ export const LOCK_REGISTRY = [
     critical: ['本机 `~/.dsh/.agent-presets/**/agent.cordis.yml` + `~/.dsh/profiles/web/cordis.patch.yml`（**只读**：绝不写）',
       '对端（<host>）同名两件（**只读**：只 ssh `echo %USERPROFILE%` + scp 拉副本到 `<butler-root>\\_tmp\\preset-drift-<日期>\\peer\\`，对端零写入）',
       '`docs/`（**写**：一份/天，覆盖写）',
-      '**不改任何 preset / patch**（漂移只报不改；修法归主线「the operator<mainline>」另开卡）'],
+      '**不改任何 preset / patch**（漂移只报不改；修法归主线「操作者<mainline>」另开卡）'],
     skipPolicy: 'skip', source: 'tickd' },
   // ── 2026-10-22（卡「素材库中心化」· 方案 §3.5）：`secretary-sync` ────────────────────────────
   //   每小时一轮 + tickd/开机后补一轮，把素材两件套（`feed.db` 索引 + `<butler-root>\secretary` 文件）
@@ -926,7 +926,7 @@ export const LOCK_REGISTRY = [
       '本机 `<butler-root>\\secretary\\<域>\\<期>\\*`（**写**：只新建缺失文件，`COPYFILE_EXCL` 硬禁覆盖）',
       '本机 `~/.dsh/secretary-sync.lock`（**写**：单轮互斥）',
       '本机 `<butler-root>\\docs/`（**写**：回滚清单，追加式）',
-      '对端（<host>）`~/.dsh/memory/feed.db` + `<butler-root>\\secretary\\` 的**新增**行/文件（the operator 2026-10-22 已批：只增不删、可回滚）',
+      '对端（<host>）`~/.dsh/memory/feed.db` + `<butler-root>\\secretary\\` 的**新增**行/文件（操作者 2026-10-22 已批：只增不删、可回滚）',
       '隧道开关 `~/.dsh/relay/relay-config.json` + 短租租约 `~/.dsh/relay/short-lease.json`（按需短租时；与 relay-ondemand 同款「登记而不加锁」）'],
     skipPolicy: 'skip', source: 'tickd' },
   // ── 2026-10-23（<mainline> ⑤ · 日程提醒）：`family-remind` ─────────────────────
@@ -949,7 +949,7 @@ export const LOCK_REGISTRY = [
   //        `activation.json` 由 `--activate` 写、job 内**只读**（缺 ⇒ fail-closed `rc=4`）。
   //     ② N2 起 `selectChannel` 缺省按 `'wechat'`（不再是 `() => null`）；**真发与否只由 `opts.send` 决定**，
   //        缺省 ⇒ `undeliverable/no-transport`。真发送末端 = `tools\wechat-bridge\lib\messaging\direct-transport.mjs`，
-  //        接线属 **N3**（要the operator在场 + 开闸窗口）。
+  //        接线属 **N3**（要操作者在场 + 开闸窗口）。
   //     ③ 锁纪律的现行口径 = 方案 §0c **#18**（提醒链自身不持锁 / 由 `lockRunner` 单实例串行）
   //        ＋ **#21**（`DSH_BUTLER_TICK_LOCK_HELD` 含 `family-remind` ⇒ job 环境**可归档**；否则手工禁归档；
   //        两者冲突时 **env 优先**）⇒ 下面 `critical` 已按此改写。
@@ -1058,7 +1058,7 @@ export const LOCK_REGISTRY = [
   //   ⚠️ `lockRunner: true`：tickd 经 `lib/tick-job-runner.mjs` 抢锁后注入 `DSH_BUTLER_TICK_LOCK_HELD=family-vectors`
   //     （tickd L2404 现核）⇒ 脚本内那次 acquireTickLock 走虚拟锁、父子不双层加锁；**手工直跑**（无该 env）
   //     时脚本自己抢 `tick-family-vectors.lock` ⇒ 与到点那轮互斥。
-  //   ⚠️ **不共用the operator的锁**：job id 自带锁名 ⇒ 无需进 `ALLOWED_SHARED_LOCKS`（那只管"多 job 共用一个 lockName"）。
+  //   ⚠️ **不共用操作者的锁**：job id 自带锁名 ⇒ 无需进 `ALLOWED_SHARED_LOCKS`（那只管"多 job 共用一个 lockName"）。
   //   ⚠️ `ttlMs: 50 min` 必须 > 整轮真实上界（总预算 40 min + 收尾 < 1 min）：tickd 侧每 ttlMs/3 续租
   //     （`butler-tickd.mjs` L2396-2398），**只有手工直跑**才暴露"锁先到期 = 双写"。
   //   ⚠️ `benignExitCodes:[3]` 在 JOBS 侧声明（3 = 锁被占 / 对端不可达 ⇒ 让路）；1 是真失败。
@@ -1067,7 +1067,7 @@ export const LOCK_REGISTRY = [
     critical: ['~/.dsh/family-memory/memory-vectors-<key>/tick-state.json（每库各自的同步进度 + 桥台账）',
       '~/.dsh/family-memory/memory-vectors-<key>/vectors.db（**可重建**：删目录回到 datastore-unavailable，与现状等价）',
       '~/.dsh/family-memory/memory-family-<key>.db（**只读**：执行体一律 readOnly，本 job 零 DELETE/UPDATE）',
-      '**不碰**：`butler-memory-vectors-state.json`（the operator memory-vectors job 的 state，每库显式 --state-file 隔离）'
+      '**不碰**：`butler-memory-vectors-state.json`（操作者 memory-vectors job 的 state，每库显式 --state-file 隔离）'
       + ' · 生产 8201 桥（子进程一律 --no-bridge） · dsh-memory 插件代码'],
     skipPolicy: 'skip', source: 'tickd',
     lockRunner: true,
@@ -1156,7 +1156,7 @@ export const LOCK_REGISTRY = [
     lockRunnerReason: '包装层不再抢同一把锁：真锁由 ledger-scan 入口自己拿，tickd 侧与手跑走同一份代码才不会互相顶死',
   },
   // ── 2026-11-04（协调线 P3「防偷偷缩目标」）：`mainline-anchor` = `anchor-watch.mjs` ────────────
-  //   真源 = `docs/` §8.4 / §8.3（D-1 由the operator 2026-11-04 01:47 拍「②+③」）。
+  //   真源 = `docs/` §8.4 / §8.3（D-1 由操作者 2026-11-04 01:47 拍「②+③」）。
   //
   //   ⚠️ **只登一个代表项**（= 本条 `mainline-anchor`）：写锚/写快照真正用的是**按线展开的动态锁**
   //     `mainline-anchor:<lineId>`（ttl 30 s、`env:{}` ⇒ 交接窗口里不继承父锁），由
@@ -1243,7 +1243,7 @@ export function jobsForLock(lockName) {
   return LOCK_REGISTRY.filter((e) => e.lockName === name);
 }
 
-/** 锁的the operator类型（'tickd' / 'schtasks' / 'both' / 'manual' / 'unknown'）。 */
+/** 锁的操作者类型（'tickd' / 'schtasks' / 'both' / 'manual' / 'unknown'）。 */
 export function ownerOf(jobId) {
   return lockEntryFor(jobId)?.source ?? 'unknown';
 }

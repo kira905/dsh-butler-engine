@@ -495,9 +495,9 @@ export function writeObserveDoc(file, content, opts = {}) {
 //     或 `running === true`；标题是【完成】⇒ 判 `settled` 静默（**宁可漏报不误报**）。
 //
 // ── 防误伤第五条（2026-09-29【待续】误报修复）───────────────────────────────
-//   现象：主线**有意**停在【待续】（= the operator主动标记「收手但没闭环，等主人拍板 / 等外部条件」）
+//   现象：主线**有意**停在【待续】（= 操作者主动标记「收手但没闭环，等主人拍板 / 等外部条件」）
 //     时，原标题分类把【待续】算成 `unfinished` ⇒ 被每 30 分钟误报一次断链（`rehandoff:true` 还会误重投）。
-//     实测：2026-09-29 11:4x 驾照 v4 主线停在【待续】期间the operator被该看门狗喊过。
+//     实测：2026-09-29 11:4x 驾照 v4 主线停在【待续】期间操作者被该看门狗喊过。
 //   ⇒ 修法：新增 `PAUSED_TITLE_PREFIXES = ['【待续】']` + `titleStateOf` 返回 `paused`
 //     + `CHAIN_VERDICT.PAUSED`，判定**紧接 `settled` 之后短路**（与静默时长无关）。
 //   ⇒ 红线：本判定**不消耗节流配额**（不写 `lastNotifiedAt` / 不写状态文件 `chains[chainKey]`）
@@ -595,7 +595,7 @@ export const UNFINISHED_TITLE_PREFIXES = Object.freeze(['【续】', '【运行�
 /** 标题前缀：命中 ⇒ 该会话是**有意停手**（等主人拍板 / 等外部条件）⇒ **不作**断链候选。
  *  ⚠️ 2026-09-29 修复：`【待续】` 原先误列进 `UNFINISHED_TITLE_PREFIXES`，导致「主线有意停在
  *  【待续】等主人拍板」被每 30 分钟误报成断链（`rehandoff:true` 时还会误重投）。
- *  会话标题三态里【待续】= the operator主动标记的「收手但没闭环」⇒ 语义上就是「别催」。 */
+ *  会话标题三态里【待续】= 操作者主动标记的「收手但没闭环」⇒ 语义上就是「别催」。 */
 export const PAUSED_TITLE_PREFIXES = Object.freeze(['【待续】']);
 /** 标题前缀：命中 ⇒ 该会话已明确收工 ⇒ **不作**断链候选（防「链正常结束」误报）。 */
 export const SETTLED_TITLE_PREFIXES = Object.freeze(['【完成】']);
@@ -785,7 +785,7 @@ export function judgeChainSilence(input = {}) {
     it.titleState = titleStateOf(it.title);
     // 判据②的防误伤：标题显示已收工 ⇒ 静默（链正常结束与断链在这一层长得一样）
     if (it.titleState === 'settled') { it.verdict = CHAIN_VERDICT.SETTLED; it.reason = '标题【完成】⇒ 链正常收工（非断链）'; return items.push(it); }
-    // 【2026-09-29 修复】标题【待续】= **有意停手**（the operator主动标记的「收手但没闭环，等主人/等外部条件」）
+    // 【2026-09-29 修复】标题【待续】= **有意停手**（操作者主动标记的「收手但没闭环，等主人/等外部条件」）
     //   ⇒ 静默。位置在 `settled` 之后、静默时长判据之前：与时长无关（有意停 5 分钟还是 5 小时都别催）。
     //   后续影响面 = 零：`planChainWatchdog()` 只对 `SILENT` 项动作 ⇒ 本判定既不报警、不重投，
     //   也不写状态文件（**不消耗 30 分钟节流配额、不落 `lastNotifiedAt`**）。

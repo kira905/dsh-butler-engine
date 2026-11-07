@@ -5,19 +5,19 @@
 //   · 步骤 2「独立通道告警」= `gateComponent` 内 `alert({source:'butler-version:<name>'})`（**已在产**，不依赖面板/日报）；
 //   · **步骤 3「按宪法自修复」在生产只有"建议"、无自动触发点**（主档 A 域 L167 缺口原话）；
 //   · **步骤 4「降档联动」在生产只有 `suggestDegradeOnMismatch()` 建议函数、无自动触发点**；且 `lib/version.mjs:278`
-//     有明文设计选择：「只给建议、**不自动执行** —— 自动降档 = 改自治行为，归the operator」。
+//     有明文设计选择：「只给建议、**不自动执行** —— 自动降档 = 改自治行为，归操作者」。
 //
 // 【本模块补的是什么】步骤 3 / 4 的**自动触发点**（= 谁在什么时候自动把这两步跑起来），**不是**取消
 //   `version.mjs` 那个设计选择：
 //     · 自动触发点 = 周期自检（tickd 侧）**自动**调用本模块 ⇒ **自动**产出「修复请求」与「降档请求」，
 //       并**自动**落审计台账（`~/.dsh/butler-audit/<月>.jsonl`，type = `version-disposition`）+ 独立通道告警；
 //     · **动手**（重部署组件 / 真降档）**仍归人 / 卡** —— 重部署要走 `deploy.mjs`（含重启，须窗口），
-//       降档要改自治行为（归the operator）。本模块**零开关、零写入自治状态**：`autoExecute` 恒为 `false`，
+//       降档要改自治行为（归操作者）。本模块**零开关、零写入自治状态**：`autoExecute` 恒为 `false`，
 //       且把这件事做成**可断言字段**（而不是一句注释）。
 //
-// ⚠️ 为什么不在本模块自动降档：① 改自治行为属the operator（version.mjs:278 既有口径）；② 自动重启 = 断服务风险；
-//   ③ §11 红线「the operator不给自己扩权」——新增一个"自动降档"通路就是扩权。⇒ 本版如实记 `degradeRequested`
-//   + `autoExecute:false`，把「要不要开自动执行」列为**待the operator拍板**（见交付报告）。
+// ⚠️ 为什么不在本模块自动降档：① 改自治行为属操作者（version.mjs:278 既有口径）；② 自动重启 = 断服务风险；
+//   ③ §11 红线「操作者不给自己扩权」——新增一个"自动降档"通路就是扩权。⇒ 本版如实记 `degradeRequested`
+//   + `autoExecute:false`，把「要不要开自动执行」列为**待操作者拍板**（见交付报告）。
 //
 // 去重：同一「不匹配签名」（组件名排序）在冷却窗内只写一次台账/告警 —— 周期自检不得刷屏。
 import fs from 'node:fs';
@@ -130,7 +130,7 @@ export function runVersionDisposition(opts = {}) {
     level: sug.level ?? null,
     components: sug.components ?? [],
     why: sug.why ?? null,
-    // ↓↓ 本模块**不执行**降档（改自治行为归the operator）—— 写成可断言字段，不做口头承诺
+    // ↓↓ 本模块**不执行**降档（改自治行为归操作者）—— 写成可断言字段，不做口头承诺
     autoExecute: false,
     executableBy: ['owner-panel', 'main-session'],
     gate: 'lib/version.mjs:278 既有设计选择「只给建议、不自动执行」；本版不新增自动降档通路（§11 不给自己扩权）',
@@ -188,7 +188,7 @@ export function runVersionDisposition(opts = {}) {
     out.alertError = String(e?.message ?? e);
   }
 
-  out.reason = `已落台账（${out.auditFile ?? '?'}）：修复请求 + 降档请求均已登记；**执行仍未做**（重部署须窗口 / 降档归the operator）`;
+  out.reason = `已落台账（${out.auditFile ?? '?'}）：修复请求 + 降档请求均已登记；**执行仍未做**（重部署须窗口 / 降档归操作者）`;
   return out;
 }
 

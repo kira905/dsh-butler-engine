@@ -1,6 +1,6 @@
 // dsh-butler / lib/autonomy-modules.mjs —— **模块级熔断开关（kill switch L2）**
 //
-// 由来：the operator 2026-09-13 定「开关要活的——哪个模块坏了，直接关掉再去修」。
+// 由来：操作者 2026-09-13 定「开关要活的——哪个模块坏了，直接关掉再去修」。
 //   · L0 全局降档  = butler-autonomy-state.json 的 level（lib/autonomy-state.mjs）
 //   · L1 总开关    = butler-autonomy.json 四键（lib/autonomy.mjs）
 //   · L2 **模块级** = 本文件（butler-autonomy.json 的 `modules` 段）
@@ -20,7 +20,7 @@
 //      理由：降档本身可能由配置损坏触发（fail-safe=degraded），若把守护鱼/调度器一并停掉，
 //      一次损坏就会让生态失去自愈与观测能力（fail-safe 反向踩雷）。
 //   ② `failSafe: 'baseline'`（同上 4 件）—— 文件**读不到/损坏**时**保持现状（baseline）**，不判"关"。
-//      理由：kill switch 的语义是"the operator显式拨的闸"；读不到配置 = 没人在拨闸 ≠ the operator要求关闭。
+//      理由：kill switch 的语义是"操作者显式拨的闸"；读不到配置 = 没人在拨闸 ≠ 操作者要求关闭。
 //      对这类件，"保守"= 维持现状（否则会静默停摆 / 悄悄放松保护），而不是"少做动作"。
 //      ⚠️ 显式写进文件的 `enabled:false` 一律照办（那才是有 since/by/why 的熔断动作）。
 //
@@ -104,17 +104,17 @@ export const MODULE_IDS = {
     note: '2026-10-10 落地：判定复用 watch-collect 的 stuck；重启走 p0-auto-restart；每会话每天 2 次提醒',
   },
   // 【P8 [12] · 2026-09-28】本地块**已落地**（原 note = 「待开发」）：
-  //   · **owner 由 `p3AutoEnabled` 改为 `p8AutoEnabled`** —— the operator 2026-09-10 16:36 拍板
+  //   · **owner 由 `p3AutoEnabled` 改为 `p8AutoEnabled`** —— 操作者 2026-09-10 16:36 拍板
   //     「p8-auto 独立自主（不挂在 p3-auto 之下）」+ 设计档 §「口径已拍板」第 4 条。
   //     ⇒ P8 搬移的放行 = L0 正常 × `p8AutoEnabled`（本行 owner）× `modules['p8-tidy']`（本行 L2），
   //       **不并** `runAction` 的四键那道恒查（P8 动作体自己过闸，见 lib/tidy-move.mjs 的 resolveMoveGate）。
   //   · `baseline:false` = **默认关**（配置文件里没有该键 ⇒ 判关；放行 = `module on p8-tidy`）。
   //   · 实现体 = `lib/tidy-move.mjs`（observe / dry-run / apply 三档）+ `butler-tidy-move.mjs`（CLI）。
-  //   · ⚠️ 本卡（P1 期）**只跑 observe 档**，开关保持关；真搬（P3 期）须 observe 两周零误报 + the operator明说。
+  //   · ⚠️ 本卡（P1 期）**只跑 observe 档**，开关保持关；真搬（P3 期）须 observe 两周零误报 + 操作者明说。
   'p8-tidy': {
     label: 'P8 临时区自动收纳（L2 搬移 · 只搬不删 · 可一键回滚）', owner: 'p8AutoEnabled', baseline: false,
     note: 'P1 期已实现（2026-09-28）：observe/dry-run 零副作用可跑，apply 须过独立闸（L0 × p8AutoEnabled × modules[p8-tidy]）+ 抢 handoff 锁；'
-      + '真搬默认关（P3 期须 observe 两周零误报 + the operator明说）；实现体 = lib\\tidy-move.mjs',
+      + '真搬默认关（P3 期须 observe 两周零误报 + 操作者明说）；实现体 = lib\\tidy-move.mjs',
   },
   'p9-handoff': { label: 'P9 交接自动钩子（开机/收工自动交接）', owner: 'p3AutoEnabled', baseline: false, note: '待开发' },
   // 【伪模块行（① 包冻结项②）】p3-auto **不是独立模块**：它是 P3 整族的总闸行 ——
@@ -129,7 +129,7 @@ export const MODULE_IDS = {
     note: '待开发；放行 = p3AutoEnabled + autoHealEnabled + p5AutoRollbackEnabled 三把键（前两把模块门/通道级，第三把通道级 raw；p3 另由 runAction 恒查）',
   },
   'p0-auto-restart': {
-    label: 'P0 低水位自动重启（无the operator显式请求）', owner: 'p3AutoEnabled', rawOwner: 'p0AutoRestartEnabled', baseline: false,
+    label: 'P0 低水位自动重启（无操作者显式请求）', owner: 'p3AutoEnabled', rawOwner: 'p0AutoRestartEnabled', baseline: false,
     note: '待开发；放行 = p3AutoEnabled + p0AutoRestartEnabled 两把键（p3 既是模块门 owner 亦由 runAction 恒查，p0raw 走通道级）',
   },
   'auto-heal': { label: '组件自修复的自动修复分支', owner: 'autoHealEnabled', baseline: false, note: '待开发' },
@@ -157,13 +157,13 @@ export const MODULE_IDS = {
   'board-line-archive': {
     label: '看板周期归档（整线"在板全完成"→ 逐线调既有归档命令；单轮上限 + 默认 dry-run）',
     owner: 'p3AutoEnabled', baseline: false,
-    note: '已放行（2026-09-28 K5d · the operator当日 10:19「K5 接闸门，然后放行」）：模块门已接线进动作体 + tickd 调用点每 30 分钟；'
+    note: '已放行（2026-09-28 K5d · 操作者当日 10:19「K5 接闸门，然后放行」）：模块门已接线进动作体 + tickd 调用点每 30 分钟；'
       + '关回 = module off board-line-archive（真执行立即 blocked）。实现体 = lib\\board-line-archive.mjs',
   },
   // 【施工卡 ④-3 · ④ 包 U-1「登记」】插件自动升级链（🟢/🟡 档）。
   //   `owner: null` = **不吃生态四键**：本链的总闸是**独立闸文件** `~/.dsh/upgrade-automation.json` 的 `enabled`
   //     （fail-closed：文件缺失 / 不可解析 ⇒ 关），不并入四键 —— 叠第二把总闸会出现"两把总闸谁说话"的歧义
-  //     （④ 包方案 §11 **D-2** 建议值 (b)；⚠️ 该条**待the operator拍板**，本登记按建议值落并如实标注）。
+  //     （④ 包方案 §11 **D-2** 建议值 (b)；⚠️ 该条**待操作者拍板**，本登记按建议值落并如实标注）。
   //   `baseline: false` = **默认关**（配置文件里没有该键 ⇒ 判关；已上线件才写 true）。
   //   家规接入点 = L0 降档闸 + 升级锁（二者由 orchestrator 在 `--run` 路径上恒查，不靠本行判定）。
   //   ⚠️ 本行**不改变任何既有判定**：`checkModuleAllowed()` 读的仍是 `owner` + `scope` + `failSafe`，
@@ -278,7 +278,7 @@ export const MODULE_IDS = {
   //     P3 动作族，受四键 + L0 降档 + 本模块 L2 开关约束）；改它 = 改这一行（可改点）。
   //   `baseline:false` = 默认关（配置文件里没有该键 ⇒ 判关；已上线件才写 true）。
   //   ⚠️ **默认关是设计内状态、不是故障**（方案 §4.1「总开关初值与首次放行」· D-1 已拍）：阶段 1 一旦
-  //     真生效会**自动开新会话（花钱）· 自动改另一个会话的标题 · 自动改绑看板卡** ⇒ 属乙档"必须先问the operator"；
+  //     真生效会**自动开新会话（花钱）· 自动改另一个会话的标题 · 自动改绑看板卡** ⇒ 属乙档"必须先问操作者"；
   //     **首次放行属乙档**（须带 `--reason` + 留痕），**关回 = 甲档**，再放行仍按乙档（单向规则）。
   //   ⚠️ 总闸分两处：阶段 1（agent 侧）= `modules.relay.enabled`（本行）；阶段 2（tickd）= `jobs.relay.enabled`。
   //      **人工通道**（`--handoff --no-create --actor manual`）**不受总开关约束**（它是兜底手段）。
@@ -304,18 +304,18 @@ export const MODULE_IDS = {
       + '放行由本模块位单键决定，再叠四键会出现"两把总闸谁说话"；fail-safe = 读不到配置即判关'
       + '（宁可让标记多留一轮，也不越权往向量库写）。【A-8 可见化】没有 L1 键 ⇒ 四键关不掉它也放行不了它。',
   },
-  // 【V3 地基 · 规则升档「只进日报」（2026-10-19 卡 · the operator 12:08 拍板）】登记 `rulecheck-daily` 模块位 ——
+  // 【V3 地基 · 规则升档「只进日报」（2026-10-19 卡 · 操作者 12:08 拍板）】登记 `rulecheck-daily` 模块位 ——
   //   作用域 = **仅日报段渲染**（`tools\dsh-butler-panel\lib\rulecheck-daily.mjs` 读本键）：
   //     开 ⇒ 日报出现「🧭 规矩体检」段；关 ⇒ **整段不渲染**（不是空行）。
   //   为什么必须登记：未登记时 `setModuleEnabled` 硬拒写入 ⇒ 没有"一键开/关"的载体（照同族口径）。
   //   `owner:null` + `scope:'infra'` + `failSafe:'baseline'`：它是**观测件**（只读跑 rulecheck 后渲染计数），
   //     不执行任何动作、不碰卡状态、不发通知 ⇒ 不属生态四键动作族；配置读不到时保持 baseline（= 开，观测不消失）。
-  //   `baseline:true` = **默认开**（the operator 2026-10-19 12:08 拍板：四条规矩升档 = 只进日报；观察 ≥2 周再谈"拦"）。
+  //   `baseline:true` = **默认开**（操作者 2026-10-19 12:08 拍板：四条规矩升档 = 只进日报；观察 ≥2 周再谈"拦"）。
   //   ⚠️ 本模块的语义红线：只报事实、不拦卡、不推送手机、不改四件判据（observe 档）。
   'rulecheck-daily': {
     label: '日报「规矩体检」段（DoR / DoD / 缺陷分级 / 复盘+惯例 · 只读渲染）',
     owner: null, baseline: true, scope: 'infra', failSafe: 'baseline',
-    note: '默认开（the operator 2026-10-19 拍板"只进日报"）：日报整段渲染；关 ⇒ 整段不出现（`module off rulecheck-daily`）；'
+    note: '默认开（操作者 2026-10-19 拍板"只进日报"）：日报整段渲染；关 ⇒ 整段不出现（`module off rulecheck-daily`）；'
       + '只读 + observe 档，不拦卡 / 不推送 / 不改判据；实现体 = tools\\dsh-butler-panel\\lib\\rulecheck-daily.mjs',
     noOwnerWhy: '观测件（scope:infra）：只读跑 `rulecheck` 并把红黄计数渲染进日报，不执行任何动作、不碰卡状态、不发通知'
       + '⇒ 不属生态四键所管的「有闸自主动作」；关它 = 停日报段（走 L2 模块开关 modules.rulecheck-daily），'
@@ -643,7 +643,7 @@ export function setJobEnabled(id, enabled, opts = {}) {
 /** job 开关总览（CLI / tickd --status 用）。knownJobIds 给了就把"没覆盖项的"也列出来。
  *  【2026-10-23 · stall-nudge】主线停滞提醒（工作日 08:30 · 外部通道真发）的**开关表唯一源 =**
  *  `butler-tickd.mjs#JOBS`（本文件不维护第二份 job 清单；knownJobIds 由调用方从 JOBS 传入）。
- *  该 job 未声明 `defaultWhenUnset` ⇒ 缺覆盖项 = 开（the operator已拍「真发」）。
+ *  该 job 未声明 `defaultWhenUnset` ⇒ 缺覆盖项 = 开（操作者已拍「真发」）。
  *  【H4b】第三参 `declaredDefaults` = `{ <jobId>: boolean }`，每 job 的「缺覆盖项时默认值」
  *  由调用方按 JOBS 声明给出（`declaredJobDefault(j)`）。不传 → 逐字节保持既有口径
  *  （`opts.defaultEnabled !== false`）。**必须传**才能让 `job list` 与 tickd 判定显示一致，

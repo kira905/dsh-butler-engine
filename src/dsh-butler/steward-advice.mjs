@@ -59,7 +59,7 @@ export const ADVICE_VERSION = '1.0.0';
 const STEWARD_ENTRY = path.join(HERE, 'steward.mjs');
 
 /** 判决表（§1.7.1 末行 · 规矩清单的唯一来源）。 */
-export const RULE_TABLE_REL = 'docs/';
+export const RULE_TABLE_REL = 'docs/rules/advice-rules.md';
 
 /** `id` 复合形态前缀 —— 纯 `R<N>` 不行（该表已从 v0.1 重排到 v1.0 一次，编号会漂）。 */
 export const RULE_ID_PREFIX = '判决表v1.0#R';
@@ -113,8 +113,8 @@ export const REPORT_DIR_REL = 'docs\\reports';
 
 /** 年轮档（"今天没事"要列 mtime · §6 判据 6）。 */
 export const ARTIFACTS = Object.freeze({
-  capability: 'docs/',
-  tongchou: 'docs/',
+  capability: 'docs/reports/capability.json',
+  tongchou: 'docs/reports/coordination.json',
 });
 
 // ================================================================ 小工具
@@ -657,7 +657,7 @@ export function artifactMtimes({ dsh = DSH, home = dshHome(), report = null } = 
   add('看板账本（revision 来源）', path.join(home, 'task-board', 'ledger-v2.json'),
     report?.ledgerRevision != null ? `revision=${report.ledgerRevision}` : '');
   add(`年轮 · capability.json`, path.join(dsh, ARTIFACTS.capability));
-  add(`年轮 · 协调线.json`, path.join(dsh, ARTIFACTS.tongchou));
+  add('chrono · coordination.json', path.join(dsh, ARTIFACTS.tongchou));
   add('甲层产物（本轮 spawn 的 stdout）', path.join(home, 'steward-state.json'),
     report?.generatedAt ? `report.generatedAt=${report.generatedAt}` : '');
   return rows;
@@ -1252,10 +1252,10 @@ async function selftest() {
     assert(r.called === false, 'called 应为 false');
     assert(Array.isArray(r.artifacts) && r.artifacts.length >= 3, `产物 mtime 列表应有 ≥3 行，实际 ${r.artifacts?.length}`);
     assert(r.artifacts.some((a) => a.name.includes('capability.json')), '应列 capability.json');
-    assert(r.artifacts.some((a) => a.name.includes('协调线.json')), '应列 协调线.json');
+    assert(r.artifacts.some((a) => a.name.includes('coordination.json')), '应列 coordination.json');
     assert(r.artifacts.some((a) => a.name.includes('看板账本')), '应列看板账本 revision');
     const md = fs.readFileSync(r.markdownPath, 'utf8');
-    assert(md.includes('读了哪几份产物') && md.includes('capability.json') && md.includes('协调线.json'), 'md 必须列产物 + mtime（否则是假绿）');
+    assert(md.includes('读了哪几份产物') && md.includes('capability.json') && md.includes('coordination.json'), 'md 必须列产物 + mtime（否则是假绿）');
   });
 
   // —— 夹具 9：同一天跑两遍不重调；--force-llm 才重调

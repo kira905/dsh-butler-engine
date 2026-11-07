@@ -1153,9 +1153,9 @@ export function collectSessionHealth(opts = {}) {
  * ⚠️ 加新条目请写清「为什么这个是已知形态」；**别把真错配塞进来当白名单**（那等于关掉体检）。
  */
 export const KNOWN_LOCAL_FORK = new Map([
-  ['dsh-feiyu-mood', 'the assistant心情插件 · 已彻底自建 fork（`<butler-root>\\dsh-feiyu-mood-src`，1.1.0-local），声明 0.0.0-local 是占位、防市场覆盖'],
-  ['dsh-feiyu-shape', 'the assistant形态插件 · 本地魔改（实体 0.2.0），声明 0.0.0-local 是占位、防市场覆盖'],
-  ['dsh-feiyu-moodread', 'the assistant情绪读数外挂（实体 0.1.2），声明 0.0.0-local 是占位、防市场覆盖'],
+  ['dsh-feiyu-mood', '助手心情插件 · 已彻底自建 fork（`<butler-root>\\dsh-feiyu-mood-src`，1.1.0-local），声明 0.0.0-local 是占位、防市场覆盖'],
+  ['dsh-feiyu-shape', '助手形态插件 · 本地魔改（实体 0.2.0），声明 0.0.0-local 是占位、防市场覆盖'],
+  ['dsh-feiyu-moodread', '助手情绪读数外挂（实体 0.1.2），声明 0.0.0-local 是占位、防市场覆盖'],
 ]);
 
 /** 结构健康（heavy：junction 目标 / 版本漂移 / 未分组）。 */

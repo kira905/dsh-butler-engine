@@ -440,7 +440,7 @@ export function classifyFanout({ cards = [], boardById = new Map(), sessionsById
 export function composeFanoutText({ thread, from = '', text = '' }) {
   const id = str(thread && thread.id);
   const title = str(thread && thread.title) || '(无标题)';
-  const who = str(from).trim() || 'the operator';
+  const who = str(from).trim() || '操作者';
   return `【协调线扇出 · ${id}《${title}》 · 来源：${who}】\n${str(text)}`;
 }
 
@@ -783,7 +783,7 @@ export async function runCli(argv = [], opts = {}) {
   if (action === 'thread-post') {
     const tid = valueAfter(argv, '--thread') || '';
     const text = str(valueAfter(argv, '--text') ?? '');
-    const from = str(valueAfter(argv, '--from') ?? '').trim() || 'the operator';
+    const from = str(valueAfter(argv, '--from') ?? '').trim() || '操作者';
     const apply = argv.includes('--apply');
     const noWake = argv.includes('--no-wake');              // 闸③：一键关唤醒段（= 回到 C12-B 行为）
     const nowMs = Number(opts.now ?? Date.now());

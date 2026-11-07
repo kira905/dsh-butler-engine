@@ -1483,7 +1483,7 @@ export function renderText(report, stateInfo = null) {
 
 /**
  * 判活 ① 的「带项目名」：剥掉**所有** `【…】` 前缀后剩下的实质文本。
- *   `【运行】【续】the assistant新家 · 赛博生活` ⇒ `the assistant新家 · 赛博生活`；`【运行】` 或默认标题 ⇒ `''`。
+ *   `【运行】【续】示例主线 · 赛博生活` ⇒ `示例主线 · 赛博生活`；`【运行】` 或默认标题 ⇒ `''`。
  * ⚠️ 只做**形状**判断（不判断项目真伪，判伪要读内容，撞 §5 第一条 policy）。
  */
 export function projectNameOf(title) {
@@ -2126,7 +2126,7 @@ export async function selftest() {
     return fn;
   };
   const NOW = 1793557400000;
-  const LIVE = { sid: '<session-id>-2222-3333-4444-555566667777', title: '【运行】the assistant新家 · 赛博生活',
+  const LIVE = { sid: 'fixture-session-a', title: '【运行】示例主线 · 赛博生活',
     updatedAt: NOW - 3600e3, running: true, blank: false, cwd: 'C:\\workspace' };
   const live = (over = {}) => ({ ...LIVE, ...over });
   const shaOf = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
@@ -2175,7 +2175,7 @@ export async function selftest() {
     // 双向：给同一 sid 一条主线绑定 ⇒ 必须放行（③ 的机械来源真的在用）
     const plan2 = planBroadcast({
       items: [{ ...LIVE, title: '【运行】', ageDays: 0.04 }],
-      bindings: { cards: {}, lines: { 'the assistant新家 · 赛博生活': { ownerSessionId: LIVE.sid } } }, now: NOW, selfSid: '',
+      bindings: { cards: {}, lines: { '示例主线 · 赛博生活': { ownerSessionId: LIVE.sid } } }, now: NOW, selfSid: '',
     });
     assert(plan2.sendCount === 1 && plan2.send[0].ownerVia.some((v) => v.startsWith('line:')), '绑定没被识别成归属');
   });
@@ -2268,11 +2268,11 @@ export async function selftest() {
   });
 
   run('夹具26 · C7 · --only 只收窄合格集合（挡掉的照样挡，不许拿它绕过判活）', () => {
-    const b = { ...LIVE, sid: '<session-id>-2222-3333-4444-555566667777', title: '【运行】另一条线 · 活', updatedAt: NOW - 7200e3 };
+    const b = { ...LIVE, sid: 'fixture-session-b', title: '【运行】另一条线 · 活', updatedAt: NOW - 7200e3 };
     const plan = planBroadcast({ items: [live(), b], bindings: null, now: NOW, selfSid: '', only: [b.sid] });
     assert(plan.pool === 1 && plan.notSelected === 1, `pool/notSelected 不对：${plan.pool}/${plan.notSelected}`);
     assert(plan.sendCount === 1 && plan.send[0].sid === b.sid, '--only 没把投递范围收到那条');
-    const staleOne = { ...LIVE, sid: '<session-id>-2222-3333-4444-555566667777', title: '【运行】老线 · 活', updatedAt: NOW - 9 * DAY_MS };
+    const staleOne = { ...LIVE, sid: 'fixture-session-c', title: '【运行】老线 · 活', updatedAt: NOW - 9 * DAY_MS };
     const plan2 = planBroadcast({ items: [b, staleOne], bindings: null, now: NOW, selfSid: '', only: [staleOne.sid] });
     assert(plan2.sendCount === 0 && plan2.blocked[0].reasons.includes('stale'), '--only 绕过判活了（stale 的还会被投）');
   });
@@ -2751,7 +2751,7 @@ export async function selftest() {
     assert(rd.total === 1 && rd.rows[0].kind === 'blocked' && rd.rows[0].cardId === 'c-blocked', `行流不对：${JSON.stringify(rd.rows)}`);
     const st = JSON.parse(fs.readFileSync(path.join(home, STEWARD_STATE_FILE), 'utf8'));
     assert(st[ATTENTIONS_FIELD].length === 1 && /blocked/.test(st[ATTENTIONS_FIELD][0].question), `blocked 没自动登记：${JSON.stringify(st[ATTENTIONS_FIELD])}`);
-    assert(st[ATTENTIONS_FIELD][0].options.join(',') === 'the operator接着干,等主人,先放着', `blocked 选项不对：${JSON.stringify(st[ATTENTIONS_FIELD][0].options)}`);
+    assert(st[ATTENTIONS_FIELD][0].options.join(',') === '操作者接着干,等主人,先放着', `blocked 选项不对：${JSON.stringify(st[ATTENTIONS_FIELD][0].options)}`);
   });
 
   run('夹具49 · C12-D · 候选为 0 时账本里的 failed 卡仍留行（2026-11-02 实测踩到的真缺口）', () => {

@@ -81,7 +81,7 @@ const CLASS_LABEL = Object.fromEntries(CLASSES.map((c) => [c.id, c.label]));
 //       「源码漂移断言」—— 拿 `butler-tickd.mjs` 源码里的声明逐条比对，任何一条对不上就红。
 // ---------------------------------------------------------------------------
 export const ENV_EXIT_TABLE = Object.freeze([
-  // ⚠️ 订正注（2026-10-23 · 主线「the operator<mainline>」卡① 执行会话）：整表**行号已全部重算**（原 12 条行号
+  // ⚠️ 订正注（2026-10-23 · 主线「操作者<mainline>」卡① 执行会话）：整表**行号已全部重算**（原 12 条行号
   //   全部过期 —— `_test\test-failure-classify.mjs` ③ 的「行号也要对得上」12 条全红，属**既有红**，
   //   改动前对照 = 用新 job 加入前的源码行号复算同样红）。
   //   同轮补齐两条漏登记：`memory-hit-collect`（2026-10-23 加的 job，声明了 [3] 但表里没有）、

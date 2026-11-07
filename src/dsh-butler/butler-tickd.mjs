@@ -192,12 +192,12 @@ export const JOBS = [
   //   语义 = 每 1 分钟扫 `~/.dsh/family-calendar/events.json`，找「未发且 remindAt <= now」的到点提醒，
   //     逐条落状态行到 `reminded.jsonl`（幂等键 = eventId + remindAt；方案 §5.6）。
   //   ⚠️ **本卡不发真消息**：脚本 `family-remind-tick.mjs` 的 selectChannel 缺省 = () => null ⇒
-  //     到点一律记 `undeliverable/no-transport`；真通道（外部通道/外部通道）属 ⑨ 卡，要the operator在场再接。
+  //     到点一律记 `undeliverable/no-transport`；真通道（外部通道/外部通道）属 ⑨ 卡，要操作者在场再接。
   //   🔴 订正注（2026-10-29 · N2 卡 · 只标注不改原文）：上面这条**已过期**。一期提醒链（N2）落地后：
   //     ① `selectChannel` 缺省按 `'wechat'`，不再是 `() => null`；
   //     ② **真发与否只由 `opts.send` 决定**：`opts.send` 缺省 ⇒ `undeliverable/no-transport`，CLI 只在
   //        `--fake-transport`（夹具专用）时注入假实现 ⇒ **本 job 行的 args 里永远不带 `--fake-transport`**；
-  //     ③ 真发送末端 = `tools\wechat-bridge\lib\messaging\direct-transport.mjs`，接线属 **N3**（要the operator在场）；
+  //     ③ 真发送末端 = `tools\wechat-bridge\lib\messaging\direct-transport.mjs`，接线属 **N3**（要操作者在场）；
   //     ④ 语义扩到：静音窗 22:30–07:00 进次日 07:00–08:00 汇总、`activation.json` 开闸下界（缺 ⇒ `rc=4`）、
   //        `attempts.json` 有界重试（3 轮 ⇒ `gave-up`）。
   //     真源 = `docs/` §2 C3/C4 · §3.5；N2 交付报告同批。
@@ -238,13 +238,13 @@ export const JOBS = [
     defaultWhenUnset: 'off',
     script: 'memory-hit-collect.mjs', args: ['--once', '--apply'], dir: HERE,
     benignExitCodes: [3], benignExitLabel: '日志缺失 / hits 目录不可写 / 上轮未释放 ⇒ 本轮让路' },
-  // ── 心情播报定时（2026-11-02 · 跨线派活：the operator<mainline>线 → butler线 · the operator 13:3x 拍板「A+B 一起」）──
+  // ── 心情播报定时（2026-11-02 · 跨线派活：操作者<mainline>线 → butler线 · 操作者 13:3x 拍板「A+B 一起」）──
   //   语义 = 每 15 分钟跑 `tools\mood-broadcast\broadcast.mjs`，把本机 state 读成一枚小快照写到
   //     `~/.dsh/feiyu-mood-broadcast/<机器名>.json`（本机 = <host-a>.json），供对端只读拉取。
   //   治什么：判据 14-c「两边互相听得见」要求播报件保持新鲜；方案档 L87 早就写了「每 N 分钟播一次」，
-  //     但**从未实现** ⇒ 播报件只在人工跑时更新，30 分钟后就判红。技术债 = `docs\技术债台账-the operator<mainline>.md` TD-35。
+  //     但**从未实现** ⇒ 播报件只在人工跑时更新，30 分钟后就判红。技术债 = `docs\技术债台账-操作者<mainline>.md` TD-35。
   //     时效判据 = 播报落后 state ≤ 30 分钟（= 2× 周期），判据器默认 maxStaleMin=30 正好，不改器具阈值。
-  //   🔴 三条不许（10-31 the operator 00:37 口径，踩了就做成「谁是真身」的选举）：
+  //   🔴 三条不许（10-31 操作者 00:37 口径，踩了就做成「谁是真身」的选举）：
   //     ① 不碰 push-to-peer / mood-sync 的 --peer-apply 与任何「推 state 到对端」的路径；
   //     ② 脚本只写**自己那一份**播报件，绝不写对端任何文件、绝不写 state（写完自证 sha 一字未变，污染 exit 9）；
   //     ③ 本行不传任何额外参数（缺省行为即口径；`--with-reason` 会多播 lastReason，未获授权不加）。
@@ -266,7 +266,7 @@ export const JOBS = [
   //     拨不回来就报警一行。五项 = 置顶复位 / 归档保护 / 会话身份漂移 / Bot ready / cwd 还在
   //     （真源 `docs\方案-Router Session-20261102.md` §3 R1-6 行 · §4 R1/R2 · §6 R10）。
   //   治什么：① 24h 归档会把 Router 会话搬走（§4 R1）② QQ 掉线没人看见（§4 R2）
-  //     ③ 换过会话之后 prefs 钉子变成死值（§6 R10：the operator的 QQ 消息进旧会话、GUI 里新会话一片空白）。
+  //     ③ 换过会话之后 prefs 钉子变成死值（§6 R10：操作者的 QQ 消息进旧会话、GUI 里新会话一片空白）。
   //   ⚠️ 复位面只有两件 RPC（`workspace.insertBefore` / `workspace.unarchiveSession`）+ 一次 prefs 改写；
   //     **绝不自己重启 dsh**（重启是 P0 闸门的事）· **不自动建目录**（免得将错就错）·
   //     **不碰 QQ 插件 dist / groupMode / c2cAllow**（那三样归 R1-3 的卡）。
@@ -342,7 +342,7 @@ export const JOBS = [
     script: path.join(PANEL, 'report.mjs'), args: [], dir: PANEL },
   // 【G23-1 · 服务面主动推送 PM1】每日早报（09:05）：
   //   口径真源 = `docs/` §1.1/§1.2/§3.4-D2 —— 常驻形态 = **tickd job**
-  //     （2026-09-18 the operator照准选项 c：不新建常驻进程、不新建插件、不新建 Windows 计划任务；
+  //     （2026-09-18 操作者照准选项 c：不新建常驻进程、不新建插件、不新建 Windows 计划任务；
   //      推送时「连→认证→发→断」，空闲不占连接 ⇒ 不与将来任何常驻长连接互踢）。
   //   ⚠️ 为什么 09:05：`daily`(09:00) 才落日报，早报要等它；且 09:05 距前一天 09:05 ≈24h05m
   //      ⇒ 方案 §2 已标为「窗口踩线」风险点，兜底 = 早报末行「回「1」可续期」提示。
@@ -373,7 +373,7 @@ export const JOBS = [
   // 【主线停滞提醒 v1 · 2026-10-23 · 卡「butler·主动推进」】工作日 08:30 真发外部通道。
   //   为什么：现有 job 都在管**卡**（queue / card-watchdog / 失败通知），没有一个在看
   //   「**主线**是不是停摆了」—— 交接档写完也没人读它的 §5「下一步」。
-  //   the operator 2026-10-23 11:05 原话：「很多主线做着做着我就忘了推进了，其实这些事才是应该你主动来找我的。」
+  //   操作者 2026-10-23 11:05 原话：「很多主线做着做着我就忘了推进了，其实这些事才是应该你主动来找我的。」
   //   形态 = `at:'08:30' + days:[MON..FRI]`（多星期形态，按 lastDay 去重；周末不跑）。
   //   参数 = `--apply --push`：写 `docs/`（**全部候选**）+ Top 3 真发外部通道。
   //   三道闸（同日一次 / Top N / 同 key 24h）全在 `stall-nudge.mjs` 内；job 本身不重试。
@@ -388,7 +388,7 @@ export const JOBS = [
   //   纯文本匹配 0 token；本脚本自带 tick 锁与 schema 守卫，失败只落 tickd 状态、不影响其他 job。
   { id: 'reconcile', label: 'P7 会照应（跨载体对账）', at: '09:10', initialMs: 0,
     script: 'butler-reconcile.mjs', args: ['--check'], dir: HERE },
-  // 官方上游动态（2026-09-15 the operator拍板「每天盯一次」）：
+  // 官方上游动态（2026-09-15 操作者拍板「每天盯一次」）：
   //   A 线（dsh-upgrade-watch）只报 release tag / 最近提交的**时间戳**，看不出「官方干了啥」；
   //   本 job 出**内容级**增量：compare API 的自基线提交明细（默认滤 merge）+ 目录热点 +
   //   断裂面符号分级告警（只认生产代码命中）+ 版本线（主包 / 桌面版 @deepseek-ai/dsh-desktop）。
@@ -398,7 +398,7 @@ export const JOBS = [
   { id: 'upstream', label: '官方上游动态', at: '09:20', initialMs: 0,
     script: path.join(DSH, 'tools', 'dsh-upstream-watch.mjs'),
     args: ['--report-dir', path.join(DSH, 'docs', 'report-dir')], dir: path.join(DSH, 'tools') },
-  // 外部通道官方 SDK 版本盯梢（2026-10-30 · the operator 17:20 拍板「发图暂缓，盯着 SDK 更新」）：
+  // 外部通道官方 SDK 版本盯梢（2026-10-30 · 操作者 17:20 拍板「发图暂缓，盯着 SDK 更新」）：
   //   为什么：外部通道腿（iLink）下行 CDN 要第二个参数 `encrypted_param`，而官方 SDK 2.4.10 仍是单参数
   //   （服务端先改、SDK 没跟）⇒ 「发二维码图片」暂缓。官方哪天发新版 ⇒ 脚本写一条 info 告警喊人回来看。
   //   纯只读 + 零 token + 零依赖；状态 `~/.dsh/wechat-sdk-watch-state.json`，同一版本只喊一次（幂等）。
@@ -416,7 +416,7 @@ export const JOBS = [
   //     ③ 体检本身是**确定性只读操作**（读决策表 + 三件只读工具 + 落一份报告），不需要 LLM。
   //   频率：tickd 调度器只支持 'HH:MM' / 'MON HH:MM'（无月频形态），故**每天 09:30 触发**，
   //     由脚本内的月频闸（默认 1/15）决定是否真跑 —— 非目标日直接 exit 0（成本≈启动一次 node）。
-  //     频率可配置：~/.dsh/upgrade-automation.json 的 patrol.days（口径 D4 待the operator拍板是否保留月频）。
+  //     频率可配置：~/.dsh/upgrade-automation.json 的 patrol.days（口径 D4 待操作者拍板是否保留月频）。
   //   09:30 接在 daily(09:00) / reconcile(09:10) / upstream(09:20) 之后，串成早晨巡检链。
   { id: 'upgrade-patrol', label: '升级巡检（只读报告）', at: '09:30', initialMs: 0,
     script: path.join(DSH, 'tools', 'dsh-upgrade-orchestrator.mjs'),
@@ -437,7 +437,7 @@ export const JOBS = [
     args: ['--peer', '<peer>', '--report-dir', path.join(DSH, 'docs', 'report-dir')],
     dir: path.join(DSH, 'tools'),
     benignExitCodes: [3], benignExitLabel: '对端不可达（隧道关 / 对端离线）⇒ 本轮让路' },
-  // preset 漂移巡检（主线「the operator<mainline>」卡① · 2026-10-23）：
+  // preset 漂移巡检（主线「操作者<mainline>」卡① · 2026-10-23）：
   //   为什么有它（主线验收判据第 8 条）：「任何人改完人格忘了重内联 ⇒ **当天就被发现**，不靠人想起来」。
   //   0.2.0 只认 `cordis.patch.yml` 的**内联**，目录版是手改的真源 ⇒ 两份漂移 = 改了不生效、且没人知道
   //   （<host> 的 whale-girl 29,380 / 27,070 自 2026-10-21 起就是这个状态，直到 10-23 手工比对才发现）。
@@ -464,7 +464,7 @@ export const JOBS = [
   //     （<host> 2e6 / <host> 3e6 / <host> 4e6）。主判据**只认 seq**，六个段的计数只披露、不判红。
   //   为什么要有它（2026-10-26 真事故）：<host> 写了一条 `#3000000` → 合并搬进 <host> →
   //     **<host> 的 `sqlite_sequence` 被顶到 3,000,000** → 之后 <host> 每条新记忆都落进 <host> 的段，
-  //     **靠the operator肉眼发现才止血**。A37 已治本（搬入一律落 1e6 段），但**没有哨兵就没人知道有没有再漏**。
+  //     **靠操作者肉眼发现才止血**。A37 已治本（搬入一律落 1e6 段），但**没有哨兵就没人知道有没有再漏**。
   //   为什么挂在本线（不是做器具的<mainline>线 A43b）：那张卡的红线是「不改 `butler-tickd.mjs`、
   //     不挂任何 tickd job」，且 job 注册表是**单点共享文件**（两线同改必撞车）⇒ 代挂归本卡。
   //   ⚠️ **纯只读 / 零 token**：三台一律 `DatabaseSync({ readOnly: true })`；对端经 ssh 喂脚本
@@ -490,7 +490,7 @@ export const JOBS = [
   //   ⚠️ 一键关回 = `node tools\dsh-butler\butler-autonomy-cli.mjs job off band-sentinel --reason "…"`。
   //   口径真源：`docs/` §8 **V31-016**（需求登记）+ 本卡交付报告。
   //   ⚠️【2026-10-27 · 卡「V3功能面·哨兵默认关」】**本 job 只该在 <host> 上跑** ⇒ 声明 `defaultWhenUnset:'off'`
-  //      （the operator 2026-10-27 01:0x 拍板 C 方案 = 治本，不是"对端先埋 job off"）：
+  //      （操作者 2026-10-27 01:0x 拍板 C 方案 = 治本，不是"对端先埋 job off"）：
   //      ① 器具要 `<host-a>`/`<peer>`/`<peer>` 三个 ssh 别名，三台里只有 <host> 齐；<host> 的 `~/.ssh/config` 只有
   //         `gitee.com`、<host> 只有 `<host-a>`/`<peer-lan>` ⇒ 那两台跑起来**必然 rc=4**（有结论地失败，但纯属无意义开销）。
   //      ② `butler-tickd.mjs` 是**双机同一份代码**（随仓同步）⇒ 对端同步到本版后**必须显式授权**才会跑；
@@ -505,16 +505,16 @@ export const JOBS = [
     budgetMs: 30_000,
     benignExitCodes: [3, 4], benignExitLabel: '号段异常(3) / 取数失败 fail-closed(4) ⇒ 有结论地跑完，不记失败',
     defaultWhenUnset: 'off' },
-  // ── 冷备作业（**三 job 归并** · the operator 2026-10-13 16:12 拍板 #12/#13）────────────────────────
+  // ── 冷备作业（**三 job 归并** · 操作者 2026-10-13 16:12 拍板 #12/#13）────────────────────────
   //   归并前 = 三个独立 job：`imagegen`（每小时索引快照 · 时段窗 08:30–18:00）/
   //     `imagegen-full`（每周五 09:40 图片镜像）/ `rollback-offsite`（工作日 08:45 回滚点打包）。
-  //     三套频率、三个开关，冷盘不可达时各自刷红（2026-09-29 08:2x the operator令其全部关回、改手动冷备）。
+  //     三套频率、三个开关，冷盘不可达时各自刷红（2026-09-29 08:2x 操作者令其全部关回、改手动冷备）。
   //   归并后 = **一个作业按序跑两件**（入口 `tools/dsh-butler/coldbackup.mjs`）：
   //     ① `rollback-points-offsite.mjs --backup --prune`（回滚点打包 + 保留策略清理）
   //     ② `imagegen-backup.mjs --snapshot --with-images`（索引快照 + 图片增量镜像）
-  //   调度 = **每周一 + 周五 13:00**（the operator口径 16:12：「每周一和周五各 1 次冷备，时间中午 13 点」）：
+  //   调度 = **每周一 + 周五 13:00**（操作者口径 16:12：「每周一和周五各 1 次冷备，时间中午 13 点」）：
   //     `at:'13:00' + days:['MON','FRI']` = 多星期形态（按 lastDay 去重；非命中日不判定、不写 lastDay）。
-  //   ⚠️ `benignExitCodes:[3]`（**the operator 16:12 #13 明确同意**）：两件脚本的"冷盘不可达"都返回 3，
+  //   ⚠️ `benignExitCodes:[3]`（**操作者 16:12 #13 明确同意**）：两件脚本的"冷盘不可达"都返回 3，
   //     作业聚合成 3 ⇒ tickd 记 `deferred`、**不涨 failures**（「周一周五非工作日（冷盘不可达）就跳过」）。
   //     反向锚：真失败（exit 1）仍照常涨 failures 并报红（见 `_test/test-tickd-benign-exit.mjs`）。
   //   ⚠️ 冷盘根**故意不在 job 里传**（沿 2026-09-11 口径：tickd 是双机同一份代码，写路径 = 单机绝对路径病根）
@@ -524,7 +524,7 @@ export const JOBS = [
   //     一键关回 = `butler-autonomy-cli.mjs job off coldbackup`。归并前那三条 `enabled:false` 键
   //     （imagegen / imagegen-full / rollback-offsite）**保留在 butler-autonomy.json 里作历史留痕**，
   //     对本次无影响（JOBS 里已无这三个 id）。
-  //   ⚠️ 沿革与原始口径：`docs/` §6b #12/#13（the operator原话逐条照录）。
+  //   ⚠️ 沿革与原始口径：`docs/` §6b #12/#13（操作者原话逐条照录）。
   { id: 'coldbackup', label: '冷备作业（回滚点 + 生图 · MON/FRI 13:00）', at: '13:00', initialMs: 0,
     days: ['MON', 'FRI'],
     script: 'coldbackup.mjs', args: [], dir: HERE,
@@ -546,7 +546,7 @@ export const JOBS = [
   //          与热采本身是否采集成功无关 ⇒ 记 failures 属误报（假红），会淹没真问题。
   //        · 只对**显式声明**的 job 生效：未声明的 job 收到任何非 0 码照旧计失败
   //          （反向锚 `_test/test-tickd-benign-exit.mjs`：未声明的 exit 3 仍报红、声明了但 exit 1 也仍报红）。
-  //   ⚠️【2026-09-23 the operator拍板 · <sync-repo> 停热采】`args` 挂 `--skip-sessions`：热采不再采<sync-repo>
+  //   ⚠️【2026-09-23 操作者拍板 · <sync-repo> 停热采】`args` 挂 `--skip-sessions`：热采不再采<sync-repo>
   //      （不写 `gitBackup\dsh-sessions`）⇒ <sync-repo> 工作副本无变化 ⇒ 不 commit、`ahead=0` ⇒ 不 push。
   //      改前实测：<sync-repo> `ahead=0` + 工作区干净 ⇒ 挂参数**不会**产生一次积压推送（不会再把配额顶高）。
   //      <sync-repo> 的体积检查段仍在跑 ⇒ 配额告警（当前 101.9% 🔴）继续可见，不是"看不见了"。
@@ -554,7 +554,7 @@ export const JOBS = [
   { id: 'hot',       label: 'P9 热采（30 分钟档）', intervalMs: 30 * MIN, initialMs: 210_000,
     script: 'hot-collect.mjs', args: ['--skip-sessions'], dir: HERE,
     benignExitCodes: [3], benignExitLabel: '交接锁被占 / 双开嫌疑 / 推前安全门拦截' },
-  // ── 2026-10-11（卡「文件同步」· the operator 01:11 令）：`text-sync` 接 tickd ─────────────────
+  // ── 2026-10-11（卡「文件同步」· 操作者 01:11 令）：`text-sync` 接 tickd ─────────────────
   //   为什么有它（**hot 的两个盲区**，实测口径见 tools\dsh-butler\text-sync.mjs 文件头）：
   //     ① `hot` 只采 `HOT_SPECS` 清单里的东西 —— <sync-repo> 只有 `docs\坑库` + `docs\report-dir`,
   //        `<butler-root>\docs` 其余全部（交付报告 / 方案 / 交接档 / 变更流水 / 文档总索引…）
@@ -581,7 +581,7 @@ export const JOBS = [
   //   采集副本 + 走**既有**推送链路（`dsh-backup-sync.ps1 -Push`，含超集挡推门，不另造 push）。
   //   为什么 04:20：避开 hot（30 分钟档，整点/半点后 210s）、queue（1 分钟）、pitfall（30 分钟）
   //   与 rollback-offsite（03:30）/ daily（09:00）。
-  //   为什么**不是** 30 分钟档（the operator 2026-09-17 已否决）：<sync-repo> 实测 240MB > §5.4 的 200MB 阈值，
+  //   为什么**不是** 30 分钟档（操作者 2026-09-17 已否决）：<sync-repo> 实测 240MB > §5.4 的 200MB 阈值，
   //   而 memory.db 是二进制快照、git 无法内容增量 ⇒ 高频只增肥不增价值。
   //   `benignExitCodes: [3]`：脚本的让路码（交接锁被占 / <sync-repo> 未 unlock / 推前安全门拦截）语义同 hot
   //   （卡 AT19 口径，真失败仍走 exit 1，照旧计 failures 并在日报报红）。
@@ -589,7 +589,7 @@ export const JOBS = [
   { id: 'memory-snapshot', label: '记忆库每日热采（未变不推）', at: '04:20', initialMs: 0,
     script: 'memory-snapshot.mjs', args: [], dir: HERE,
     benignExitCodes: [3], benignExitLabel: '交接锁被占 / <sync-repo> 未 unlock / 推前安全门拦截' },
-  // ── 会话异地镜像（2026-09-20 · the operator拍板「主推 <host>，<sync-repo> 瘦身」）──────────────────
+  // ── 会话异地镜像（2026-09-20 · 操作者拍板「主推 <host>，<sync-repo> 瘦身」）──────────────────
   //   为什么要它：Gitee <sync-repo>（免费私有仓 1GB 配额）装不下会话全量 —— 实测日增 ~150MB、
   //   2.7 天触线（09-16 已因超配额被拒推一次）。本 job 把 **会话（活跃+归档）+ 附件实体**
   //   增量镜像到 <host> 本地盘（7×24 常驻宿主，D 盘空闲 237GB），无任何配额约束；
@@ -597,7 +597,7 @@ export const JOBS = [
   //   产物：tools/dsh-session-mirror.mjs（零依赖 tar+scp+ssh；**只增不删**：远端永不 purge）
   //   实测（2026-09-20 首传）：1664 文件 / 1342MB / 112s；增量 5~6 文件 / 4~6s。
   //   initialMs 480s：与 hot（210s，30 分钟档）错峰，避开同一时刻两个网络/IO 高峰。
-  //   `benignExitCodes: [3]`：脚本的让路码 = **对端（<host>）不可达**（the operator外出/对端重启属常态）
+  //   `benignExitCodes: [3]`：脚本的让路码 = **对端（<host>）不可达**（操作者外出/对端重启属常态）
   //     ⇒ 不计 failures、不刷日报红（口径同 hot，见上面 AT19 注释）。
   //   `lockRunner: true`：脚本自身无 acquireTickLock（可被手工直跑）⇒ 由 tickd 包装层抢锁，
   //     避免手工直跑与 tick 并发重复传输、争状态文件。
@@ -628,11 +628,11 @@ export const JOBS = [
   //     双落到 `docs\report-dir\`（与既有 `upstream-*.md` / `watch-*.md` 同目录习惯）。
   //   `--audit-remote` 全程**只读**（不写 `butler-session-mirror.json`）⇒ 与推送 job 没有共享写对象；
   //     锁仍**独立登记**（见 lib/butler-locks.mjs 的 mirror-audit 行 —— 漏登记 = J3 当场 ❌）。
-  //   `benignExitCodes: [3]`：脚本让路码 = **对端（<host>）不可达**（the operator外出 / 对端关机属常态），
+  //   `benignExitCodes: [3]`：脚本让路码 = **对端（<host>）不可达**（操作者外出 / 对端关机属常态），
   //     口径同 hot / session-mirror。⚠️ **代价如实登记**（方案 §4.3 · R3-4）：连续 rc=3 ⇒ failures 恒 0
   //     ⇒ 日报「tick 调度健康」一声不响（补偿落点经复审判为"落点缺失"，已升级为方案 §6.5-D8 待拍，
   //     首期按默认 ③ = 零改动如实接受；⇒ 一级可见面是**周报 md**，不是日报）。
-  //   `at: 'SUN 10:30'`：周日白天（the operator在家窗口概率高）、避开 imagegen-full(FRI) / weekly(MON) / 早间链；
+  //   `at: 'SUN 10:30'`：周日白天（操作者在家窗口概率高）、避开 imagegen-full(FRI) / weekly(MON) / 早间链；
   //     pickDue 语义实测 —— **命中日过了点仍会在本日后续 tick 补跑**（lastWeek 只在真跑完时写）。
   //   `budgetMs` 只是耗时预算（JOBS 无 kill 超时）；实测单次 1.7–6.1 s ⇒ 300 s 富余 ~50×。
   //   不配 `lockRunner`：本 job 走 `--audit-remote` 路径自身不抢锁（只 `--fetch` 路径持锁）⇒
@@ -665,9 +665,9 @@ export const JOBS = [
   { id: 'auto-heal',        label: 'P3 组件自修复（默认关）',       intervalMs: 60 * MIN, initialMs: 330_000,
     script: 'butler-auto-tick.mjs', args: ['--job', 'heal'], dir: HERE },
   // ── 2026-09-16（卡：P3 自主动作 ctx-guard · 上下文看门）──────────────────────
-  //   语义：每 **2 分钟**（2026-09-22 the operator拍板由 5 分钟收紧）扫全部会话，对 `running === true` 且**投影用量**超软限（默认 300K）/ 硬限（450K）的
+  //   语义：每 **2 分钟**（2026-09-22 操作者拍板由 5 分钟收紧）扫全部会话，对 `running === true` 且**投影用量**超软限（默认 300K）/ 硬限（450K）的
   //   会话投递一条「该移交了」的提醒。
-  //   ⚠️ **投递通道 2026-09-24 起分两档**（卡「夜批03 · 投递分级实现」，the operator D27=(b′)）：
+  //   ⚠️ **投递通道 2026-09-24 起分两档**（卡「夜批03 · 投递分级实现」，操作者 D27=(b′)）：
   //     · 软限 = `queue`（排队等当前回合结束，**不打断**，与交付前一致）；
   //     · 硬限 = **可 `steer`**（`session.prompt { mode:'steer' }`：当前 step 跑完时插话，**不 abort 工具**），
   //       但**默认关**（开关 = `butler-autonomy-limits.json` 的 `ctxGuard.steer.enabled`，未配置即关）
@@ -681,7 +681,7 @@ export const JOBS = [
   //      ③ 生产 `butler-autonomy.json` 的 `jobs['ctx-guard'].enabled=false` —— 调度层也显式关着，
   //         放行时一把 `butler-autonomy-cli.mjs job on ctx-guard --why "..."`（**不改代码**）。
   //   initialMs 与既有接线 job 错峰（queue-wake 240s / restart 270s / rollback 300s / heal 330s）。
-  //   ⚠️ 2026-09-22（the operator拍板）：intervalMs **5 → 2 分钟** —— 生产实测「越线 → 投递」原最坏要等一轮
+  //   ⚠️ 2026-09-22（操作者拍板）：intervalMs **5 → 2 分钟** —— 生产实测「越线 → 投递」原最坏要等一轮
   //      5 分钟（13:02:17 那次是当轮发出）；收紧后最坏等待降到 2 分钟。`initialMs` 360s 保持不变
   //      （仍与既有 job 错峰），**阈值（300K / 450K）不动**。
   { id: 'ctx-guard', label: 'P3 上下文看门（默认关）', intervalMs: 2 * MIN, initialMs: 360_000,
@@ -702,7 +702,7 @@ export const JOBS = [
     script: 'butler-card-watchdog-tick.mjs', args: [], dir: HERE },
   // ── 2026-09-17（卡：裸跑 L1 放行收尾 · 待办 B）──────────────────────────────
   //   `evidence-precheck`（待验收卡证据预检）：核验卡声明的交付证据路径是否真存在 + 审计规则，
-  //   落 `~/.dsh/butler-precheck.json`（面板/the operator可查）并给出「🟡 证据缺失」通知清单。
+  //   落 `~/.dsh/butler-precheck.json`（面板/操作者可查）并给出「🟡 证据缺失」通知清单。
   //   为什么现在才接：动作已在 L1 放行名单（总闸 `p3AutoEnabled` 已开、四键全关的旧账已翻篇），
   //   但本 JOBS 表**没有调用点** ⇒ 它永远不会自动跑（矩阵 §3 该行"已登记·已实现；未接线"）。
   //   闸门：`runAction({kind:'evidence-precheck', consumesQuota:false})` —— **只读动作不占每日额度**，
@@ -740,8 +740,8 @@ export const JOBS = [
   // ── 2026-09-17（卡：P3 重复卡合并受控验收 · 接线 + 造样本 + 跑一次 + 回滚 + 定口径）──────
   //   `dup-cards-merge`（P3 L1 头部动作：重复卡合并 = 挂备注 + 清 schedule，**不删卡**）此前
   //   **有实现、无调度点**（只存在于 `butler-auto-tick.mjs` 的 AUTO_JOBS.dup，需人工 `--job dup`）——
-  //   原为**the operator拍板保留手动**（见 docs/ L21/L88）；
-  //   2026-09-17 the operator改拍板成「造受控样本 + 接一次 + 跑通验收」，本 job 据此新增。
+  //   原为**操作者拍板保留手动**（见 docs/ L21/L88）；
+  //   2026-09-17 操作者改拍板成「造受控样本 + 接一次 + 跑通验收」，本 job 据此新增。
   //   入口沿用 `butler-auto-tick.mjs --job dup`（与 AUTO_JOBS.dup 同一实现）。
   //   闸门：`runAction({kind:'dup-cards-merge'})` —— 过 L0 降档闸 + `p3AutoEnabled` 总闸 +
   //   24h 签名去重 + 单日上限（默认 200，见 butler-autonomy-limits.json）+ token 预算门；
@@ -805,7 +805,7 @@ export const JOBS = [
   { id: 'memory-vectors', label: '记忆向量同步（编码桥 + 增量同步 · 默认关）', intervalMs: 60 * MIN, initialMs: 510_000,
     script: 'butler-memory-vectors-tick.mjs', args: ['--allow-host', '<host-a>,<host-b>'], dir: HERE,
     benignExitCodes: [3], benignExitLabel: '宿主未声明 / 记忆库不存在 / 引擎入口缺失 ⇒ 安全跳过（不建库、不报红）' },
-  // ── 2026-10-11（卡「跨机记忆库每小时自动同步」· the operator 01:11 令）───────────────────────────
+  // ── 2026-10-11（卡「跨机记忆库每小时自动同步」· 操作者 01:11 令）───────────────────────────
   //   语义 = 每小时一次跨机记忆库**双向收敛**（各机各跑一半，形态见 `mem-sync-tick.mjs` 头注释）：
   //     · driver（<host> `<host-a>`）：取对端**只读快照**（对端跑 VACUUM INTO）→ 合并进本机库
   //         → 产本机合并后快照**投递到对端 inbox** → 重建本机向量。
@@ -826,11 +826,11 @@ export const JOBS = [
   //      （`relay-cli enable`+`up`，finally 立刻 `down`；**公司有线网**禁常驻 · 家里 wifi 等其余网络可长期开）；仍不通 ⇒ 让路 exit 3
   //      （家网恢复后自动收敛；失败一律进日报，绝不静默）。
   //   `benignExitCodes: [3]` —— 让路码（对端不可达 / 角色未声明 / inbox 无快照）属环境语义，不计 failures。
-  //   intervalMs 60 分钟（the operator原话「每小时同步一次」）；initialMs 690_000 接在 interval 序列末位
+  //   intervalMs 60 分钟（操作者原话「每小时同步一次」）；initialMs 690_000 接在 interval 序列末位
   //      （… tidy 600s / archive 630s / token 660s），且**刻意晚于 `memory-vectors` 的 510s**
   //      （两者都每小时 ⇒ 每轮错开 180s；若将来改时刻，保持这个 ≥120s 的间距）。
   //   【A57 · 2026-10-27 订正注】上面两处「60 分钟 / 每小时」已过时（原句保留备查）：**A53 起 `intervalMs` = 15 分钟**
-  //      （`15 * MIN`；压档理由 = 跨机收敛更快，判据 12 由the operator 2026-10-26 22:21 拍板「两个都试」）。
+  //      （`15 * MIN`；压档理由 = 跨机收敛更快，判据 12 由操作者 2026-10-26 22:21 拍板「两个都试」）。
   //      错峰关系不变：`initialMs` 仍 690s，比 `memory-vectors` 的 510s 晚 180s（≥120s 的间距照旧成立）。
   //   【A57】`args` 追加 `--keep 96`：`mem-sync-tick.mjs` 的 `keep` 按**份数**保留，压档后
   //      `24 × 15min = 6h` 会把灾后恢复窗口缩 4 倍 ⇒ `96 × 15min = 24h` 保住原有窗口。
@@ -840,7 +840,7 @@ export const JOBS = [
     benignExitCodes: [3], benignExitLabel: '对端不可达 / 角色未声明 / inbox 无快照 ⇒ 安全跳过（家网恢复自动收敛）' },
   // ── 2026-10-30（卡「记忆两岸互通 S2」· 方案 `docs/` §9）──────────
   //   语义 = 每 30 分钟把**岸**（<host> 上的生活实例，独立 `DSH_HOME=<life-home>\.dsh`）**新增**的记忆
-  //     增量导入本机（this host）记忆库。S1 已完成一次性全量导入（154 条 → id `1500000..1500153` · 标签成对
+  //     增量导入本机（本机）记忆库。S1 已完成一次性全量导入（154 条 → id `1500000..1500153` · 标签成对
   //     `src:life,srcid:<源id>` · 判据器 `memory-bridge-probe.mjs` rc=0）；本 job 是它的**续章** ——
   //     她那边的日常写入不会自己长腿跑进来，必须有这一轮轮询。
   //   ⚠️ **只读对端、只写本机**（脚本硬约束，一条不许放宽）：对端唯一读取姿势 = 在对端 node 上跑
@@ -884,7 +884,7 @@ export const JOBS = [
 
   // ── 2026-11-06（卡「<mainline> · family 向量同步 job」· 方案 `docs/`）──
   //   家人库（`~\.dsh\family-memory\memory-family-<key>.db`）的**向量增量补齐**：读台账 → 逐库串行调现成执行体
-  //   （`family-vectors-tick.mjs` 是薄包装，零改既有执行体 / 零改 dsh-memory 插件 / 零碰the operator库）。
+  //   （`family-vectors-tick.mjs` 是薄包装，零改既有执行体 / 零改 dsh-memory 插件 / 零碰操作者库）。
   //   ⚠️ **默认关（不写死）**：`defaultWhenUnset:'off'` —— 源码**绝不写** `enabled:false`（写死 = hardDisabled，
   //      连 `job on` 都打不开）。放行 = `butler-autonomy-cli.mjs job on family-vectors --reason "…"`。
   //   ⚠️ **args 两行，拍完留一行**（卡面 §1.5-17 S5：别让待拍板项与落地清单打架）：
@@ -958,13 +958,13 @@ export const JOBS = [
     benignExitCodes: [3, 6], benignExitLabel: '对端不可达 / 上一轮仍在跑 ⇒ 本轮让路' },
   // ── 2026-09-21（卡 S3c：记忆引擎 v2 · S3c 夜间提炼）────────────────────────────
   //   语义 = 每天 04:10 把窗口（默认 24h）内新增/变更的记忆按**语义向量**聚成组，交给便宜档模型
-  //     （`deepseek-flash` · the operator链，2026-09-21 the operator拍板）提炼成**长期结论**，写成带 `distilled` 标记的新记忆（可批量回滚）。
+  //     （`deepseek-flash` · 操作者链，2026-09-21 操作者拍板）提炼成**长期结论**，写成带 `distilled` 标记的新记忆（可批量回滚）。
   //   形态 = `butler-auto-tick.mjs --job distill`（方案 §3.5 第 3 条 · P1 已拍）：
   //     · 只有这个形态才存在**真正的 job 级模块门**（tickd 的模块门只认 `tickd-jobs` 一个 id）
   //     · 复用既有 tick 调度的锁 / 失败隔离 / 日报三条通道；子脚本内的调度器锁名 = `p3-auto-distill`
   //       （tickd 抢 `tick-memory-distill.lock` 后注入 `DSH_BUTLER_TICK_LOCK_HELD`，父子不双层加锁）
-  //   ⚠️ **成本闸自带**（本生态第一个"无人值守调 LLM 的 tickd job"）：模型 `deepseek-flash`（the operator链，
-  //      2026-09-21 the operator拍板；不许改回第三方）· 调用 ≤20 次/日 · token ≤150K/日 · **超限即停 + 日报一行** · **不重试**；
+  //   ⚠️ **成本闸自带**（本生态第一个"无人值守调 LLM 的 tickd job"）：模型 `deepseek-flash`（操作者链，
+  //      2026-09-21 操作者拍板；不许改回第三方）· 调用 ≤20 次/日 · token ≤150K/日 · **超限即停 + 日报一行** · **不重试**；
   //      记账落 `~/.dsh/butler-distill-state.json`。既有 `tokenBudgetPerDay` 门只挂 `runAction()` 路径，
   //      直接 spawn 脚本的 job 天然绕开 ⇒ 必须自带（方案 §3.5 成本闸小节）。
   //   ⚠️ **两层默认关可核对**（D4 订正写法，与本文件其它 job 同款）：
@@ -1003,7 +1003,7 @@ export const JOBS = [
     //      `job list` = `🟢 开 来源=default` —— 配置里确无该键 ⇒ **声明后「缺键即关」才真成立**；
     //      放行/关回仍是 `job on|off pitfall-cluster`（有覆盖项就走 file 分支，声明不锁死开关）。
     defaultWhenUnset: 'off' },
-  // 小护士 case 保留期清理（方案 §5.1 retention 行 · the operator 2026-09-21 D3 拍板「**retention 挂 tickd**」）：
+  // 小护士 case 保留期清理（方案 §5.1 retention 行 · 操作者 2026-09-21 D3 拍板「**retention 挂 tickd**」）：
   //   ⚠️ **为什么挂 tickd 没有自举问题**（B4 修订块的设计依据）：静默窗 `--disable` 停的是
   //      `TICK_TASKS` + **tickd 进程本身**，而"修复窗口内本就不该清 case、平时 tickd 在跑"
   //      ⇒ 与「残留收敛」那一半（②守护鱼 / ③开机链）不同，retention 不会撞上"挂了个不跑的 job"。
@@ -1030,7 +1030,7 @@ export const JOBS = [
   //      memory-vectors 先例）：源码**不写** `enabled:false`（写死 = `hardDisabled`，`job on` 也打不开）；
   //      默认关的唯一权威层 = 生产 `butler-autonomy.json` 的 `jobs['relay'].enabled=false`；
   //      放行 = `butler-autonomy-cli.mjs job on relay --reason "..."`（**只改开关不改代码**）。
-  //      **首次放行属乙档**（方案 §4.1 · D-1 已拍）：阶段 2 会真开新会话（花钱）+ 调 deepseek ⇒ 必须先问the operator。
+  //      **首次放行属乙档**（方案 §4.1 · D-1 已拍）：阶段 2 会真开新会话（花钱）+ 调 deepseek ⇒ 必须先问操作者。
   //   ⚠️ **入口待阶段 2 落地时核对**（如实登记）：方案 §5.1 只登记了 `tools/session-relay.mjs`（CLI），
   //      §12 阶段 2 ① 的"事实采集器"**未写死独立文件名** ⇒ 本行先按 CLI 同址登记；阶段 2 卡若另立执行体，
   //      **必须同步改本行 + `lib\butler-locks.mjs` 的 LOCK_REGISTRY 的 `script` 字段**（两处一致）。
@@ -1087,11 +1087,11 @@ export const JOBS = [
   { id: 'night-stop-audit', label: '停手审计（只读清单 · 默认关）', at: '15:20', initialMs: 0,
     defaultWhenUnset: 'off',
     script: path.join(DSH, 'tools', 'night-stop-audit.mjs'), args: ['--write'], dir: path.join(DSH, 'tools') },
-  // ── 2026-10-14（the operator令「都做吧」· 防复发三件套 ②）：`rule-drift` 老话巡检接 tickd ─────────────
-  //   治什么病：the operator老把the operator的新口径"抄一张便利贴贴到冰箱上"（在 persona 里存副本），抄久了冰箱上那张是
-  //     三个月前的、抽屉里的（驾照细则 §11）早改了 ⇒ 新会话照冰箱干、显得死板（不敢建卡、动不动等the operator点头）；
-  //     而"冰箱"没人查，只有the operator撞见了喊一嗓子 —— **the operator被当成了检查员**。
-  //   本 job = 每天自动对一次表：扫**所有 preset 的 persona 正文 + 全部技能**，命中"教会话先问the operator"的
+  // ── 2026-10-14（操作者令「都做吧」· 防复发三件套 ②）：`rule-drift` 老话巡检接 tickd ─────────────
+  //   治什么病：操作者老把操作者的新口径"抄一张便利贴贴到冰箱上"（在 persona 里存副本），抄久了冰箱上那张是
+  //     三个月前的、抽屉里的（驾照细则 §11）早改了 ⇒ 新会话照冰箱干、显得死板（不敢建卡、动不动等操作者点头）；
+  //     而"冰箱"没人查，只有操作者撞见了喊一嗓子 —— **操作者被当成了检查员**。
+  //   本 job = 每天自动对一次表：扫**所有 preset 的 persona 正文 + 全部技能**，命中"教会话先问操作者"的
   //     保守句式族就报（判据 / 黑名单 / 豁免见 `tools\rule-drift-check.mjs` 头注释）。
   //   首跑实测价值（2026-10-14）：当场抓出 `card-no-ask` 副本落后真源 6 处口径未同步 —— 靠人记 = 必漏。
   //   ⚠️ **默认关（交付纪律，同 overnight-guard / night-stop-audit / tidy 先例）**：`defaultWhenUnset:'off'`；
@@ -1136,8 +1136,8 @@ export const JOBS = [
   //   ⚠️ **必须重启 tickd 常驻进程才生效**（JOBS 是代码常量；`--status`/`--list` 是新进程读当前代码，
   //     不代表运行中实例已加载）。**只重启 tickd，不重启 dsh**。
   //   intervalMs 12 小时（= 脚本自报的 `INTERVAL_MS = 12 * 3600_000`；采集是遍历级低频活，
-  //     间隔改了要先核对脚本内常量）。**2026-09-29 the operator令：6h → 12h**（原文「tidy 改 12 或者 24 小时
-  //     放行」，the operator取 12h 档；P8 方案 §4.1 A2 / §7.1 原文仍是「每 6h」⇒ 方案未回写，此处为现值真源）。
+  //     间隔改了要先核对脚本内常量）。**2026-09-29 操作者令：6h → 12h**（原文「tidy 改 12 或者 24 小时
+  //     放行」，操作者取 12h 档；P8 方案 §4.1 A2 / §7.1 原文仍是「每 6h」⇒ 方案未回写，此处为现值真源）。
   //   initialMs 600_000 接在既有错峰序列**末位之后**（序列：5 restart / 10 watch / 20 queue /
   //     30 watchfs / 60 pitfall / 90 external / 130 barewatch / 150 imagegen / 210 hot / 240 queue-wake /
   //     270 p0-auto-restart / 300 p5-auto-rollback / 330 auto-heal / 360 ctx-guard / 390 card-watchdog /
@@ -1159,7 +1159,7 @@ export const JOBS = [
   //     + `jobArchive()` / `lib\archive-watch.mjs`，`sch.register({...AUTO_JOBS.archive})` 在位），
   //     但本 JOBS 表**从无 archive 行** ⇒ 生产从来没调度过它（旁证：`butler-auto-actions.json` 的
   //     daily 17 天 0 条 `archive-retry`；`.auto-archive.json#state.lastResult.errors` 为空）。
-  //     本行只补「接线」；**放行是另一件事**（首次放行属乙档，等the operator拍板）。
+  //     本行只补「接线」；**放行是另一件事**（首次放行属乙档，等操作者拍板）。
   //   入口沿用 `butler-auto-tick.mjs --job archive`（与 AUTO_JOBS.archive 同一实现；子脚本内
   //     调度器锁名 = `p3-auto-archive`）。
   //   闸门：`runAction({kind:'archive-retry'})` —— 过 L0 降档闸 + `p3AutoEnabled` 总闸 +
@@ -1240,7 +1240,7 @@ export const JOBS = [
   //   现状（本卡只读取证）：tickd state 的 jobs 段只有 `upgrade-patrol`，**没有 upgrade-watch**；
   //     `dsh-upgrade-watch.mjs`（B 线：本地插件 × 主包版本体检）此前只存在于手工调用。
   //   本行 = 把它挂进早晨巡检链。**只读 + 零 token**（脚本头部：默认不写任何文件；
-  //     未传 `--json <path>` 时零写入），**不承接任何升级动作**（升级永远the operator批准后在主会话执行）。
+  //     未传 `--json <path>` 时零写入），**不承接任何升级动作**（升级永远操作者批准后在主会话执行）。
   //   ⚠️ **为什么 09:35**：接在 daily(09:00) / secretary-morning(09:05) / reconcile(09:10) /
   //     upstream(09:20) / upgrade-patrol(09:30) 之后 —— 与既有 `upstream`（A 线·内容面）
   //     同链、紧邻，两线结论并列可比；错峰避开同一分钟。
@@ -1263,7 +1263,7 @@ export const JOBS = [
   //   ⚠️ **关回（甲档·下一轮 loop 即生效）**：
   //     `node tools\dsh-butler\butler-autonomy-cli.mjs job off secretary-feed --reason "…"`。
   //   🔢 **订正注（2026-10-10 22:2x · 卡「冲刺600·第23棒补件」执行会话）**：上一段「现状（本卡只读取证）」
-  //     里的 **`switches.feed=false` 已过时** —— 该闸已依the operator 2026-10-10 21:53 令放行，现值 **`true`**
+  //     里的 **`switches.feed=false` 已过时** —— 该闸已依操作者 2026-10-10 21:53 令放行，现值 **`true`**
   //     （`readFeedGate()` 实读 `feedEnabled:true/reason:"ok"`）；`feed.db` 仍不存在、宿主仍无投喂入口
   //     ⇒ **本 job 的行为一个字节没变**（它跑 `reconcile`，只读对账、**不读该闸**）。真源 =
   //     `docs/`。**关回 = 该键改回 false**（一键）。
@@ -1271,7 +1271,7 @@ export const JOBS = [
     script: path.join(DSH, 'tools', 'secretary-feed.mjs'), args: ['reconcile'],
     dir: path.join(DSH, 'tools') },
   // ── 2026-10-12（卡 caa96f3f · 多端线）：「**按需自动开隧道**」接调度 ─────────────────────────
-  //   the operator 2026-10-12 11:32 令原文：「<host> 按需开隧道这事，如果我只是**偶尔问一句**，是不是没必要
+  //   操作者 2026-10-12 11:32 令原文：「<host> 按需开隧道这事，如果我只是**偶尔问一句**，是不是没必要
   //     开隧道，如果是**连续会话**再开吧」。
   //   语义 = 每 2 分钟判一次「本机最近有没有**连续/密集**的跨机消息」⇒ 有就 `relay-cli enable + up`，
   //     静默 M 分钟（默认 15）就 `down`；**绝不允许无脑常开**。
@@ -1280,7 +1280,7 @@ export const JOBS = [
   //   ⚠️ **两层开关都可一键关回**：① `relay-ondemand.mjs disable`（本文件配置）
   //     ② `butler-autonomy-cli.mjs job off relay-ondemand --reason "…"`（调度层）。
   //   🔴 **只关自己开的**：隧道若是**别人手动开的**（`ondemand-state.json` 无归属），本 job **不动它**
-  //     —— 免得把the operator正在用的通道掐了（配置 `manageExternal`，缺省 false）。
+  //     —— 免得把操作者正在用的通道掐了（配置 `manageExternal`，缺省 false）。
   //   🔴 **公司有线网短租**：判据 = 物理网卡 `MediaType=802.3 && Up`（脚本内探测、缓存 10 分钟、
   //     走 **pwsh 7**，禁裸 powershell 5.1）；探测不到按公司网**从严**。硬上限 `hardCapMin=30` 分钟
   //     ⇒ 到点无条件 `down`。**不碰** `DSH-Relay-<host>` 自启任务、**不碰** <host> 侧。
@@ -1370,7 +1370,7 @@ export const JOBS = [
   //      本 job 读 tickd state）⇒ 刻意不互相复制、也不共用配额（否则一次 job 抖动会挤掉真告警的额度）。
   //   ⚠️ **不刷屏**（红线③）：非关键 job 的失败**不报红**（日报里只出一行汇总）；日报每天最多逐条列 8 条。
   //   ⚠️ **默认开**（有意不声明 `defaultWhenUnset`）：本条属"送达/可观测"方向（只写自身告警日志 + `%TEMP%` 快照，
-  //      **不改生产数据、不删东西、不花钱**），且the operator 2026-10-16 明确要求「失败必须有一次送达」；
+  //      **不改生产数据、不删东西、不花钱**），且操作者 2026-10-16 明确要求「失败必须有一次送达」；
   //      一键关回 = `butler-autonomy-cli.mjs job off failure-delivery`（另有 `module off tickd-jobs` 整表停）。
   //   intervalMs 5 分钟：一轮只读 1 个 state.json（秒级）；`--emit` 时多写 ≤N 行告警 +（首败时）1 份快照。
   //   initialMs 850_000 —— 错峰硬约束（`initialMs mod gcd(P_new, P_other)` 不得与既有 job 同余）：
@@ -1384,7 +1384,7 @@ export const JOBS = [
     script: path.join(DSH, 'tools', 'dsh-butler', 'job-failure-delivery-tick.mjs'),
     args: ['--emit', '--allow-production'],
     dir: path.join(DSH, 'tools', 'dsh-butler') },
-  // ── 2026-10-16（the operator令「四件套都做，改叫插电保护，根据电源情况自己判断」· 卡「整夜模式 -> 插电保护（常驻化四件套）」③）
+  // ── 2026-10-16（操作者令「四件套都做，改叫插电保护，根据电源情况自己判断」· 卡「整夜模式 -> 插电保护（常驻化四件套）」③）
   //   语义：**周期自愈** —— 每 10 分钟按电源状态把保护态对齐一次：
   //     插电 ⇒ 保护态（不睡眠 / 不关屏 / 合盖不睡 / 防更新重启 / 放行会话接力）；电池 ⇒ 宽限 10 分钟后回日常态。
   //   幂等：状态一致时 `overnight-mode.mjs auto` **零动作、零写盘**（2026-10-16 真机实测：第 2 轮 3.0 s，
@@ -1404,7 +1404,7 @@ export const JOBS = [
   //   ⚠️ 锁登记已同步加在 `lib\butler-locks.mjs` 的 LOCK_REGISTRY（`plug-guard`，**刻意不加 lockRunner**：
   //     与 overnight-guard 同款 —— 脚本自身不抢锁，由 tickd 抢 `tick-plug-guard.lock` 并注入持锁标记）。
   //   ⚠️ **必须重启 tickd 常驻进程才生效**（JOBS 是模块级常量；`--status` 只是新进程读当前代码）。
-  //   ⚠️ 首次放行属甲档（只切本机电源设置、不花钱、不推远端、不碰对端）—— the operator 2026-10-16 已拍板做实。
+  //   ⚠️ 首次放行属甲档（只切本机电源设置、不花钱、不推远端、不碰对端）—— 操作者 2026-10-16 已拍板做实。
   //   ⚠️ **`budgetMs: 90_000`（2026-10-16 首跑实测后补）**：首跑 `ok (2761ms)` 但默认预算只有
   //     2000ms（`class-default`）⇒ 报 `超 1.381×` 并**每 30 分钟写一条告警**（污染 butler-alert）。
   //     本 job 的耗时结构：平时（未到真核点）≈ 3.0 s（node 启动 + 一次 pwsh 读 ACLineStatus）；
@@ -1465,7 +1465,7 @@ export const JOBS = [
   //       —— 只看端口不够（实测踩过「process=1 而端口空」和「端口在听但隧道半死」两种病态）；
   //     · 已在听且探针通 ⇒ **零动作**（幂等，绝不重复建连）；只缺端口 / 只缺探针 ⇒ 按半死**真重建**；
   //     · `enabled=false` ⇒ **先 `relay-cli enable` 再 `up`**（`up` 要求 enabled=true，单条拉不起来）。
-  //   ⚠️ `benignExitCodes:[3]`：脚本让路码 = **端到端探针外部阻塞**（<host> 关机 / the operator不在家网 / VPS 转发断）
+  //   ⚠️ `benignExitCodes:[3]`：脚本让路码 = **端到端探针外部阻塞**（<host> 关机 / 操作者不在家网 / VPS 转发断）
   //     ⇒ 本轮让路、不涨 failures。此时隧道本机侧是好的（端口在听、进程在），反复重建没有意义，
   //     脚本自己会把 `blockedStreak` 记账，只重建**第一次**，之后只让路。
   //   ⚠️ **默认开**（fail-safe：隧道没人保活比多跑一次更糟）—— 刻意不写 `defaultWhenUnset`，
@@ -1496,7 +1496,7 @@ export const JOBS = [
   //     · `--only docs,presets` —— 【2026-10-29 订正 · D5】**原文是 `--only docs` / 不碰 presets**
   //       （历史理由照录：presets 归<mainline>线，对端那份 whale-girl 预设正在 FLIP2-C 重启窗口里改，
   //       本 job 去写会和那边撞车；docs 才是"拆仓之后没人搬"的那一块）。**该窗口已于 2026-10-28 结束**，
-  //       the operator 2026-10-29 已拍 D5（清单 `docs/`）⇒ args 改为 `docs,presets`
+  //       操作者 2026-10-29 已拍 D5（清单 `docs/`）⇒ args 改为 `docs,presets`
   //       （预设是口径文件，不同步的话换机会丢）。
   //       开前用 `--only presets` 干跑量过（2026-10-29 15:35，rc=0、零写入）：本机 6 份 / 对端 <host> 17 份；
   //       去程（→对端）新增 1 份（`card-no-ask/preset.yml`）· 跳过 4（peer-newer 2 / same-content 2）·
@@ -1504,7 +1504,7 @@ export const JOBS = [
   //       **更新 0 · 冲突 0** ⇒ 只增不覆盖。
   //       🔴 跨线注意：对端 `.agent-presets` 归**<mainline>线 / <mainline>线**。若将来摘要里出现
   //         `presets：更新 N 份`（= 真覆盖了对端）⇒ 先 `butler-autonomy-cli.mjs job off text-sync-direct`
-  //         停手，找the operator判是否上双写保护（`--dual-write`）—— **别自己拍**。
+  //         停手，找操作者判是否上双写保护（`--dual-write`）—— **别自己拍**。
   //     · `--max-batch-bytes 8388608` —— 批 1 实测：单批按默认 32 MB 走隧道会 `scp: Broken pipe`（rc=255），
   //       8 MB + 内部 3 次退避重试才稳。
   //   ⚠️ `benignExitCodes:[3]`：脚本让路码 = 通道不通 / 对端不可达 / 锁被占（批 1 契约明确写了 3=让路）
@@ -1531,7 +1531,7 @@ export const JOBS = [
     args: ['--apply', '--only', 'docs,presets', '--max-batch-bytes', '8388608'],
     dir: path.join(DSH, 'tools', 'dsh-butler'), budgetMs: 1_200_000,
     benignExitCodes: [3], benignExitLabel: '通道不通 / 对端不可达 / 锁被占 ⇒ 本轮让路（物理常态）' },
-  // ── 2026-10-29（V3 功能面 · **真源 = `docs/` B2 + D-b1** · the operator「其他按建议落」）──
+  // ── 2026-10-29（V3 功能面 · **真源 = `docs/` B2 + D-b1** · 操作者「其他按建议落」）──
   //   为什么要有它（B2）：R-044 **两次复发**（2026-10-22 / 2026-10-28）长的是同一个样子 ——
   //     `sync-ignore.mjs --check` 这条判据早就有，可它只等人手工跑；没人跑 ⇒ 排除清单悄悄漂移，
   //     直到下一次出事才被发现。治复发的办法不是再写一份判据，而是**让 tickd 定期跑它**：
@@ -1581,7 +1581,7 @@ export const JOBS = [
     script: path.join(DSH, 'tools', 'dsh-butler', 'tickd-inspect-15m.mjs'),
     dir: path.join(DSH, 'tools', 'dsh-butler'), budgetMs: 300_000 },
   // ── 2026-10-28（V3 功能面 · **真源 = 本卡 / 报告 `docs/`**）──
-  //   为什么要有它：the operator**不看外部通道告警**（原话「现在外部通道那边的告警我都不咋看了」），而
+  //   为什么要有它：操作者**不看外部通道告警**（原话「现在外部通道那边的告警我都不咋看了」），而
   //     `~\.dsh\butler-alert.log` 已积 **9,328 条 / 5.7 MB**、多数是「job 耗时超预算」这类 info
   //     ⇒ **告警量本身就是它失效的原因**。于是只开一条**窄口子**：
   //     **文档直连同步真的断了才发一条外部通道**，通了再发一条「已恢复」。
@@ -1625,15 +1625,15 @@ export const JOBS = [
   // ── 2026-10-30（<mainline> · 46-B「outbox 超时告警」· 真源 = `docs/`）
   //   为什么要有它：2026-10-28 清掉 12 个「算完从没人取走」的孤儿结果（10-12 ~ 10-27 陆续攒的）
   //     —— 它们就躺在 `<butler-root>-mailbox\qrog\outbox` 里，此前**没有任何人 / 任何 job 会发现**。
-  //     the operator当场同意加常检：outbox 压着超 15 分钟的结果，就得有人知道。
+  //     操作者当场同意加常检：outbox 压着超 15 分钟的结果，就得有人知道。
   //   两件套（分工不混）：
   //     · `tools\mailbox\outbox-stale-check.mjs` = **纯只读判定**（rc 0 正常 / 3 超时 / 2 用法 / 4 读不到仓；
   //       一个字节都不写，绝不删/搬/commit/push）
   //     · 本 job 跑的是 `tools\mailbox\outbox-stale-tick.mjs` = **策略层**（去重 + 送达）
-  //   送达链（args 显式 `--apply` 才真发）：① `hub-ctl push`（外部通道长连接 · 只发the operator单聊）
-  //     → ② the operator本人外部通道直发（与 `notify-docsync` 同一个口子、同一个人）→ ③ 会话通知 + 当日段文件
+  //   送达链（args 显式 `--apply` 才真发）：① `hub-ctl push`（外部通道长连接 · 只发操作者单聊）
+  //     → ② 操作者本人外部通道直发（与 `notify-docsync` 同一个口子、同一个人）→ ③ 会话通知 + 当日段文件
   //     （`butler-alert.log` 一行 + 桌宠 `/whale/say` + `docs/`）。
-  //   ⚠️ **只发the operator本人**；🔴 绝不发家人（不读写家人库、不走家人通道）。
+  //   ⚠️ **只发操作者本人**；🔴 绝不发家人（不读写家人库、不走家人通道）。
   //   ⚠️ 去重：同一文件名 TTL（默认 6 小时）内只喊一次，每天最多 6 条
   //     —— 不让「15 分钟一跑」变成 96 遍刷屏。
   //   ⚠️ **默认开**（fail-safe：这条口子就是"结果没人取"的唯一常检，关着等于没装）；
@@ -1647,7 +1647,7 @@ export const JOBS = [
   //   budgetMs 90_000：一轮 = 每文件一次 `git log`（实测单次 ≈ 30 ms）+ 至多一次送达
   //     （hub push / 外部通道 send 各自 spawnSync 上限 60 s）⇒ 常态 < 3 s。
   //   ⚠️ 必须 `--stop` + `--ensure` 才生效（JOBS 是模块级 const）；**只重启 tickd，不重启 dsh**。
-  { id: 'outbox-stale', label: '仓信箱 outbox 超时告警（只读判定 + 只喊the operator · 15 分钟）',
+  { id: 'outbox-stale', label: '仓信箱 outbox 超时告警（只读判定 + 只喊操作者 · 15 分钟）',
     intervalMs: 15 * MIN, initialMs: 55_000,
     script: path.join(DSH, 'tools', 'mailbox', 'outbox-stale-tick.mjs'),
     args: ['--apply'],
@@ -1681,7 +1681,7 @@ export const JOBS = [
     script: 'ledger-scan.mjs', args: ['--apply'], dir: HERE, budgetMs: 110_000,
     defaultWhenUnset: 'off' },
   // ── 2026-11-04（协调线 P3「防偷偷缩目标」）：`mainline-anchor` ─────────────────────────────
-  //   真源 = `docs/` §8.3 / §8.4 ③（D-1 由the operator 2026-11-04 01:47 拍「②+③」）。
+  //   真源 = `docs/` §8.3 / §8.4 ③（D-1 由操作者 2026-11-04 01:47 拍「②+③」）。
   //   干什么：每 2 分钟跑一遍 `anchor-watch.mjs` —— ① 现算档 A 名单（在途 ≥1 ∧ 近 7 天有流水）
   //     ② 逐线读 `docs/` 与**上一份快照**比，判「锚被动过」（anchor-shrunk）
   //     ③ 全量锚按 `{line} ∪ aliases` 分组判 anchor-forked ④ 落 `_archive\anchor-snapshots\`（每线留 30 份）

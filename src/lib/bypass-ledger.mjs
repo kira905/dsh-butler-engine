@@ -9,7 +9,7 @@
 //   ② **P8 refcheck `docs` 规则**把「文档提及」当「引用」且 `blocking:true` ⇒ 339 条被拦里 300 条只被 docs 命中，
 //      阈值判据**不可达** ⇒ 只能整体放宽（而不是知道"这个门误报率多少"）。
 //   ③ **`guard-unhealthy` / `dsh-why.mjs` 误报"双 launcher"** —— 同坑复发（只修一处、没有双向测）。
-//   ⇒ 门一误报，人（或the operator）就学会绕过；绕过一旦不可见，**门就等于没有**。
+//   ⇒ 门一误报，人（或操作者）就学会绕过；绕过一旦不可见，**门就等于没有**。
 //
 // ───────────────── 四条硬口径（改本文件前先读） ─────────────────
 //   ① 🔴 **fail-open（本件的第一性原理）**：台账写失败**绝不能**反过来拒跑 / 阻断 / 改返回值语义。
@@ -216,7 +216,7 @@ export function summarizeBypass(rows) {
  * ⚠️ 这是"拦了多少"的唯一真源映射；新增门要显示拦截数**必须**在这里加一行。
  *   🔴 加之前**先核实审计里真有该事件类型**（2026-10-16 实测 `~/.dsh/butler-audit/2026-10.jsonl`：
  *     `restart-request-rejected` = 2 条 ✓；`lock-takeover` = 14 条但它是**升级锁被接管**、不是"文件租约被拒改"
- *     ⇒ the operator初版把 file-lease 错映射到它，已改回 null —— 这就是本节"宁可不显示，不编数字"的由来）。
+ *     ⇒ 操作者初版把 file-lease 错映射到它，已改回 null —— 这就是本节"宁可不显示，不编数字"的由来）。
  */
 export const GATE_DENY_AUDIT_TYPE = {
   'restart-force': 'restart-request-rejected',   // 重启请求被交接窗口/裸跑期闸门拒掉（审计流水真有该类型）

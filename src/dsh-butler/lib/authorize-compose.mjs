@@ -31,7 +31,7 @@ export const AUTHORIZE_COMPOSE_VERSION = '0.1.0';
  * 合成一律走 `value`，字符串档位只在接口层出现（便于人读）。
  */
 export const S_TIERS = Object.freeze({
-  S0: Object.freeze({ value: 0, label: '全人工', note: '只读陈列；任何写动作都须the operator/面板显式发起' }),
+  S0: Object.freeze({ value: 0, label: '全人工', note: '只读陈列；任何写动作都须操作者/面板显式发起' }),
   S1: Object.freeze({ value: 1, label: '只告警', note: '可自动发现并告警，不得自行动手' }),
   S2: Object.freeze({ value: 2, label: '可预览级自动', note: '方案 §3.5.6 映射：L1 动作（可回滚、低风险）所需档' }),
   S3: Object.freeze({ value: 3, label: '可常规自动', note: '方案 §3.5.6 映射：L2 动作所需档' }),
@@ -62,7 +62,7 @@ export const ACTION_L_TIER = Object.freeze({ L1: 2, L2: 3, L3: 4 });
 /**
  * actor 矩阵 → 该 actor **允许的最大**自治档。
  * 对齐 `lib/manual-actions.mjs` 现有语义（本表只做"同一件事的数值化"，不改任何既有闸门）：
- *   · `owner-panel`    = 面板按钮（the operator亲自点）⇒ 不设上限（S5）；
+ *   · `owner-panel`    = 面板按钮（操作者亲自点）⇒ 不设上限（S5）；
  *   · `main-session`   = 主线会话 ⇒ 方案里最高到"涉意图"（S4）；
  *   · `scheduled-task` = 计划任务 ⇒ 常规自动（S3，对 L2）；
  *   · `subagent`       = 子代理 ⇒ manual-actions 明文「只能调 L1」⇒ 上限 S2。

@@ -14,7 +14,7 @@
 //   ② 探针只用 **TCP connect(127.0.0.1)** 与 **状态文件 stat**：零写盘、零外部进程、不 spawn。
 //   ③ 方案 §3.5.5「建模地基四件」本版落地 = id 规则 / state 状态机 / edges / provenance **四列齐**；
 //      edges 只写**有确凿证据**的边（宁少不假）；provenance 首批一律 `self-built` 并附证据串。
-//   ④ 「对象三型 / 自治光谱 S0–S5」另两件**不属本模块**（主档 A 域另两行、仍待the operator拍板）；
+//   ④ 「对象三型 / 自治光谱 S0–S5」另两件**不属本模块**（主档 A 域另两行、仍待操作者拍板）；
 //      本版只把它们落成 CI 的 `type` / `sTier` 两列（S 档 = 该对象被允许的最大自治度，方案 §3.5.7）。
 //
 // 写盘口径：唯一写口 = `writeRegistry()`（走 `lib/store.mjs#writeJsonAtomic` 原子写）。
@@ -116,7 +116,7 @@ export function discoveryScope(opts = {}) {
     {
       name: 'dsh-web', type: 'expect', aliases: ['dsh web', 'DSH GUI', '3080'],
       probe: { kind: 'port', port: 3080, host: '127.0.0.1' },
-      expect: '在听（掉线 = 服务不可用）', sTier: 'S1', owner: 'the operator',
+      expect: '在听（掉线 = 服务不可用）', sTier: 'S1', owner: '操作者',
       provenance: 'self-built', provenanceEvidence: 'DSH 主包（npm @deepseek-ai/dsh）+ dsh-start.ps1 启动链',
       edges: [{ to: 'exp-guard-daemon', rel: 'owned-by', evidence: 'guard.mjs 判活并拉起 dsh（进程 + 端口判据）' }],
       why: '期望型：应当在线，掉线才告警',
@@ -149,14 +149,14 @@ export function discoveryScope(opts = {}) {
     {
       name: 'clash-proxy', type: 'resource', aliases: ['Clash', '7897'],
       probe: { kind: 'port', port: 7897, host: '127.0.0.1' },
-      expect: null, sTier: 'S0', owner: 'the operator',
+      expect: null, sTier: 'S0', owner: '操作者',
       provenance: 'manually-patched', provenanceEvidence: 'tools\\dsh-proxy.ps1（按需起；节点配置本地维护）',
       edges: [], why: '资源型：按需开，关掉不是故障',
     },
     {
       name: 'phone-channel', type: 'resource', aliases: ['手机访问', '手机通道', '3081'],
       probe: { kind: 'port', port: 3081, host: '127.0.0.1' },
-      expect: null, sTier: 'S0', owner: 'the operator',
+      expect: null, sTier: 'S0', owner: '操作者',
       provenance: 'self-built', provenanceEvidence: 'tools\\dsh-phone.mjs on/off（默认关；用完即关）',
       edges: [], why: '资源型：默认关是常态',
     },

@@ -13,7 +13,7 @@
 //   schemaVersion = 1 · 持久性 = 持久 · retention = 长期保留（人工资产，不设自动清理）
 //   · 丢失后果 = 退化为"无归属信息"（44 条人工映射 + review/blocked 的人写判断一起蒸发，恢复 ≈3h）
 //   · 跨机同步 = 走仓3 **分机文件**、不跨机合并（卡 id 不是跨机共享事实，见 repo-superset FORKED）
-//   · 写入契约 = 人写（the operator/主人）+ 改前备份；渲染器只读（J7/J8）；写出唯一入口 = writeRegistry（原子写）
+//   · 写入契约 = 人写（操作者/主人）+ 改前备份；渲染器只读（J7/J8）；写出唯一入口 = writeRegistry（原子写）
 //
 // 铁律四条（机器可校验，不是口号）：
 //   ① **卡状态永不进本表**：白名单（REGISTRY_TOP_KEYS / ENTRY_KEYS / PLAN_KEYS / CARD_KEYS …）
@@ -95,7 +95,7 @@ export function emptyRegistry(host, opts = {}) {
     schemaVersion: REGISTRY_SCHEMA_VERSION,
     host: String(host ?? 'unknown'),
     asOf: opts.asOf ?? localDate(opts.now),
-    note: '人写一次（the operator/主人）· 卡状态不得写进本文件 · 渲染器只读',
+    note: '人写一次（操作者/主人）· 卡状态不得写进本文件 · 渲染器只读',
     entries: [],
   };
 }

@@ -2,7 +2,7 @@
 //
 // 由来：docs/ §5 G7 / §13.1 E5 / §13.6 D3 / §13.8 吸收表
 //   G7「降档联动（D3=A：先实现开关）」，E5 实测该文件**不存在**（9/9 就设计、至今未落地的公共件），
-//   the operator拍板 D3=A：**先把这个开关实现出来**（本卡），接线（小护士 G7 / 3.6-C repair L2）另卡。
+//   操作者拍板 D3=A：**先把这个开关实现出来**（本卡），接线（小护士 G7 / 3.6-C repair L2）另卡。
 // 配套：docs/ §3.6-C / §9.7
 //
 // ⛔ **本模块不接线**：不 import repair / guard / 小护士，也不被它们调用。本卡只交付「开关本体 +
@@ -12,7 +12,7 @@
 //   level: 'normal'   → 正常：自动动作按各自开关（lib/autonomy.mjs）与护栏判定
 //   level: 'degraded' → **降档：暂停一切自主动作，仅允许诊断与报告**
 //        ❌ 禁止：自动修复 / 自动重启 / 自动回滚 / 自动执行任何 L2+ 动作 / 自动起小护士
-//        ✅ 允许：只读诊断、采集、生成报告与告警推送、the operator显式请求的动作（人工触发的入口不受降档影响）
+//        ✅ 允许：只读诊断、采集、生成报告与告警推送、操作者显式请求的动作（人工触发的入口不受降档影响）
 //        「降档 ≠ 停机」：它是"动手能力"的闸，不是"观察能力"的闸。
 //
 // ── fail-safe（**缺文件与损坏都必须显式选定**，本卡定死并落文档）───────────
@@ -21,7 +21,7 @@
 //      逐字一致（第 45-48 行：「loss: fail-safe：默认 degraded（原 %TEMP% 方案重启/清理后静默放行自动动作）」），
 //      也与 butler-tidy-tick 的 P-1 口径（读不到 → fail-safe 视为降档）一致。
 //      副作用（已知并接受）：本开关落地后，**从未写过该文件的机器 / 删掉该文件的机器一律为降档态**，
-//      要恢复正常必须the operator显式 `node butler-autonomy-state-cli.mjs normal --by <who> --reason "<why>"`。
+//      要恢复正常必须操作者显式 `node butler-autonomy-state-cli.mjs normal --by <who> --reason "<why>"`。
 //      ⇒ 这正是"落地即保守"的设计意图，不许为了"省事"改成缺文件=normal。
 //   ② 文件损坏（非法 JSON / 空文件 / 非对象 / schemaVersion 不符）→ **degraded**（reason: file-corrupt:*）
 //      理由：损坏 = 状态不可知，不可知的自动动手比不动手更危险；且与缺文件同结论可避免"删文件就能绕过降档"。
@@ -288,7 +288,7 @@ export function degrade(opts = {}) {
   return setAutonomyState(LEVEL_DEGRADED, opts);
 }
 
-/** 恢复正常（= 重新允许自主动作按各自开关判定）。**只有the operator/编排器显式调用才允许。** */
+/** 恢复正常（= 重新允许自主动作按各自开关判定）。**只有操作者/编排器显式调用才允许。** */
 export function resume(opts = {}) {
   return setAutonomyState(LEVEL_NORMAL, opts);
 }

@@ -1,6 +1,6 @@
 {
   "name": "@kira905/dsh-butler-engine",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Resident tick scheduler with single-instance job locks, an autonomy switch matrix and a hash-chained audit log — plus a report/patrol toolkit (stagnation nudge, failure classification, progress status) and a pluggable notifier. Zero runtime dependencies.",
   "type": "module",
   "main": "./src/index.mjs",

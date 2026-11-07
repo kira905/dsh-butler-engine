@@ -3,11 +3,11 @@
 // 方案：docs/ §5「裸跑期」（行 943-959）
 //   「一律关闭」四项统一由 p3AutoEnabled + autoHealEnabled 控制，默认全 false：
 //     ① P3 全部 L1/L2 自动动作          → p3AutoEnabled
-//     ② P0 低水位自动重启（无the operator显式请求）→ p3AutoEnabled && p0AutoRestartEnabled
+//     ② P0 低水位自动重启（无操作者显式请求）→ p3AutoEnabled && p0AutoRestartEnabled
 //     ③ P5 B 层自动回滚（降人工确认）     → autoHealEnabled && p5AutoRollbackEnabled
 //     ④ 组件自修复的自动修复分支         → autoHealEnabled
 //   【第五项 · P8 [12] · 2026-09-28】P8 临时区自动收纳（L2 搬移）→ **p8AutoEnabled（独立）**，
-//     the operator 2026-09-10 16:36 拍板「p8-auto 独立自主」+ §15.1 D2。**默认 false**。
+//     操作者 2026-09-10 16:36 拍板「p8-auto 独立自主」+ §15.1 D2。**默认 false**。
 //     它与其他四项是并列关系：`p3AutoEnabled` 关不掉它、也开不了它（详见 AUTO_KINDS 上方注释）。
 //
 // **fail-safe 铁律（裸跑期放行判定的前提）**：文件缺失 / 读失败 / schema 不符 / 字段非 true
@@ -33,7 +33,7 @@ export const AUTONOMY_FILE = 'butler-autonomy.json';
 /**
  * 五项「自动执行」的口径（kind → 人类可读 + 归属开关）。
  *
- * 【P8 [12] · 2026-09-28 · 第五项 `p8-auto` 登记】the operator **2026-09-10 16:36 拍板**：
+ * 【P8 [12] · 2026-09-28 · 第五项 `p8-auto` 登记】操作者 **2026-09-10 16:36 拍板**：
  *   **p8-auto 独立自主**（不挂在 `p3-auto` 之下）—— P8 的 L2 搬移只搬不删、可一键回滚、
  *   带引用检查与 24h 活跃保护，风险面与 P3「派活」不同量级，故单独给钥匙。
  *   ⇒ `owner` / `raw` **都是 `p8AutoEnabled`**（不是 `p3AutoEnabled`）。
@@ -47,7 +47,7 @@ export const AUTONOMY_FILE = 'butler-autonomy.json';
  */
 export const AUTO_KINDS = {
   'p3-auto': { label: 'P3 全部 L1/L2 自动动作', owner: 'p3AutoEnabled', raw: 'p3AutoEnabled' },
-  'p0-auto-restart': { label: 'P0 低水位自动重启（无the operator显式请求）', owner: 'p3AutoEnabled', raw: 'p0AutoRestartEnabled' },
+  'p0-auto-restart': { label: 'P0 低水位自动重启（无操作者显式请求）', owner: 'p3AutoEnabled', raw: 'p0AutoRestartEnabled' },
   'p5-auto-rollback': { label: 'P5 B 层自动回滚', owner: 'autoHealEnabled', raw: 'p5AutoRollbackEnabled' },
   'auto-heal': { label: '组件自修复的自动修复分支', owner: 'autoHealEnabled', raw: 'autoHealEnabled' },
   'p8-auto': { label: 'P8 临时区自动收纳（L2 搬移 · 只搬不删 · 独立自主）', owner: 'p8AutoEnabled', raw: 'p8AutoEnabled' },
@@ -68,7 +68,7 @@ export function defaultAutonomy(now = Date.now()) {
       startedAt: null,
       minDays: 3,
       device: null,
-      note: '裸跑期：只盯人 + 只审计 + 只统筹，一律不自动执行；放行需the operator拍板（方案 §5）',
+      note: '裸跑期：只盯人 + 只审计 + 只统筹，一律不自动执行；放行需操作者拍板（方案 §5）',
     },
     updatedAt: new Date(now).toISOString(),
     updatedBy: null,
