@@ -12,7 +12,7 @@
 ## 0.4.0 — `jobs/` (optional add-on)
 
 Up to 0.3.x the job table listed 77 jobs while the package carried only 3 scripts — a fresh install
-showed a full schedule with nothing runnable behind it. 0.4.0 bundles **30 scripts covering 41 jobs**
+showed a full schedule with nothing runnable behind it. 0.4.0 bundles **31 scripts covering 41 jobs**
 (full list and per-script environment variables in [`jobs/README.md`](jobs/README.md)).
 
 **Still off by default** — a script being present only means "runnable", not "running".

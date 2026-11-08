@@ -2,7 +2,7 @@
 
 `butler-tickd` 的调度表（`src/dsh-butler/butler-tickd.mjs` 的 `JOBS`）里有 **77 条作业**，
 但内核自己只带 3 个脚本（`steward.mjs` / `stall-nudge.mjs` / `text-sync.mjs`）。
-本目录补上其中 **30 个作业脚本**，覆盖 **41 条作业**。
+本目录补上其中 **31 个作业脚本**，覆盖 **41 条作业**。
 
 **作业是可选附带品，与内核分层**：整个 `jobs/` 目录可以直接删掉，删了只会让那 41 条作业
 变成「找不到脚本」，不会影响调度器、锁、审计、自主矩阵这些内核件。
@@ -16,7 +16,7 @@
 | 级 | 来源 | 说明 |
 |---|---|---|
 | ① | `<包根>/jobs/` | 就是本目录 |
-| ② | 环境变量 `BUTLER_JOBS_DIR` | 指向你自己的脚本目录（绝对路径）。同名会盖住 ① |
+| ② | 环境变量 `BUTLER_JOBS_DIR` | 指向你自己的脚本目录（绝对路径）。⚠️ 同名时 **① 先命中**（包内那份胜出）—— 想用自己那份，就换个文件名，或在 `JOBS` 里把 `script` 写成绝对路径 |
 | ③ | `job.dir`（内核位置） | 内核自带的 3 个脚本走这条 |
 | ④ | 都没有 | 记 `skipped-missing-src` —— **不发红**：不涨 `failures`、不抢锁、不 spawn |
 
@@ -47,7 +47,7 @@ npx butler-autonomy-cli job off pitfall --reason "先关掉"
   与全局缺省无关），这类要显式 `job on` 才会跑。
 - **改完必须重启 tickd 常驻进程**才生效（`JOBS` 是启动期常量）：`--stop` 然后 `--ensure`。
 
-## 3. 这 30 个脚本各自覆盖哪些作业
+## 3. 这 31 个脚本各自覆盖哪些作业
 
 | 脚本 | 覆盖的作业 id | 干什么 |
 |---|---|---|
@@ -61,6 +61,7 @@ npx butler-autonomy-cli job off pitfall --reason "先关掉"
 | `butler-watch-fs.mjs` | `watchfs` | 磁盘层审计（P5） |
 | `pitfall-tick.mjs` | `pitfall` | 坑库学习（渲染色 / 写流水） |
 | `pitfall-cluster-tick.mjs` | `pitfall-cluster` | 坑库向量二级聚类 |
+| `butler-tidy-tick.mjs` | `tidy` | 收纳审计采集（只读 · 默认关） |
 | `butler-external.mjs` | `external` | 外部信号采集 + 报告（P6） |
 | `butler-reconcile.mjs` | `reconcile` | 跨载体对账（P7） |
 | `coldbackup.mjs` | `coldbackup` | 冷备（回滚点 + 生图） |
@@ -81,6 +82,10 @@ npx butler-autonomy-cli job off pitfall --reason "先关掉"
 | `dsh-butler-watch.mjs` | `watch` | P2 盯人：把待处理推到会话 / 报告 |
 | `dsh-vanish-watch.mjs` | `vanish-watch` | 大量消失告警（observe 档） |
 | `dsh-snapshot-tick.mjs` | `snapshot` | 定时快照 + 异地镜像（排除凭据） |
+
+除了这 31 个作业入口，`jobs/` 顶层还躺着 7 个**辅助 CLI**（被入口当依赖拖进来的，`JOBS` 表里没有它们）：
+`butler-audit-archive.mjs` · `butler-audit-verify.mjs` · `ledger-line.mjs` · `ledger-read.mjs` ·
+`router-inbox.mjs` · `session-say.mjs` · `yearring-index.mjs`。
 
 辅助件都在 `jobs/lib/`（`lib/ws-root.mjs` 是口径单点：工作区根 / 盘外副本根 / 快照前缀）；
 `jobs/memory-layers/` 与 `jobs/ext/` 是少数几件跨域依赖。**它们不是入口**，不要单独挂作业。
