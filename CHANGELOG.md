@@ -1,5 +1,17 @@
 # 变更记录
 
+## 0.5.1 · 2026-11-09
+
+**只订正 `examples/first-run.json`：把 `barewatch` 从首开组撤出。挂了才发现的。**
+
+- 实测：`jobs/barewatch-tick.mjs` 直接跑 rc=0，但输出是
+  `[barewatch] 跳过：组件 butler-barewatch 版本不匹配（本地 0.1.0 / 产品登记 ?）` ——
+  内部被**组件版本门**跳过。`butler-tickd --status` 里的 `ok` 只代表**进程退出 0**，不代表真干了活。
+  把它留在「第一次装完先开哪几条」里会骗人，故撤出并写进 `knownGaps`。
+- 首开组 4 条 → **3 条**（`card-watchdog` · `vanish-watch` · `queue`）；`jobs/README.md` 的条数与
+  说明同步改（含那张「脚本 ↔ 作业」表里一行被我改坏后的修回）。
+- 判据：`node --check` 0 失败；`npm test` 全过；examples JSON 可解析（`jobs` 3 条 / `knownGaps` 4 条）。
+
 ## 0.5.0 · 2026-11-09
 
 **补上「面板在只有 npm 包、没有私有工具目录的机器上也能出真数据」所缺的那几个库模块。**
