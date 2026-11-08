@@ -1,5 +1,32 @@
 # 变更记录
 
+## 0.4.0 · 2026-11-09
+
+**作业脚本进来了**（`jobs/`，可选附带品）。调度内核、锁、审计、自主矩阵的行为不变。
+
+- **新增 `jobs/` 目录**：30 个作业脚本，覆盖 `JOBS` 表里 **41 条作业**。0.3.x 的缺口是
+  「作业表 77 条、包里只有 3 个脚本」⇒ 装完看到满屏作业、一条也跑不起来。
+  逐条清单、每件吃什么环境变量、以及**哪两个脚本刻意没带**见 `jobs/README.md`。
+- **三级解析**（新增 `resolveJobEntry`，`butler-tickd.mjs` 里是单一判定点）：
+  ① `<包根>/jobs/` ② 环境变量 `BUTLER_JOBS_DIR` ③ `job.dir`（内核自带）；
+  都没有 ⇒ 记 `skipped-missing-src` —— **不发红**：不涨 `failures`、不进 `last-error`、不抢锁、不 spawn。
+  `--list` 每行标了入口来源（`[jobs]` / `[host-dir]` / `[pkg-dir]` / `[缺脚本]`），
+  `--status` 的 job 记录里多了 `lastEntrySource`。
+- **判据一处放宽（有据）**：`lib/tickd-health.mjs#BENIGN_STATUSES` 与
+  `lib/board-cleanup.mjs` 的"失败状态"白名单都加上了 `skipped-missing-src` ——
+  "没装这件东西"和"这件东西坏了"必须分开，否则默认不附带脚本会变成一片红。
+- **`queue-wake.mjs` 挪进内核位置**（`lib/queue-wake.mjs`）：`queue-watch` 一直在懒加载
+  `./queue-wake.mjs`，而 0.3.x 的包里没有这个文件 ⇒ 那一段静默降级。属修既有缺口。
+- **新增口径件 `jobs/lib/ws-root.mjs`**：工作区根 / 盘外副本根 / 快照文件名前缀 / 设备名标签正则的
+  单点定义（`DSH_WORKSPACE` / `DSH_GITBACKUP_ROOT` / `DSH_SNAPSHOT_PREFIX` / `DSH_HOST_TOKENS`），
+  换机器不必改源码。
+- **`dsh-butler-watch` 的第四路通道抽成中性注入点**：原来的字段名叫某个具体通道，
+  现在统一成 `external`（`deliver.external` / `channel.external.enabled`）。
+  本包不提供实现 ⇒ 状态恒为「外部通道未注入（默认关）」，要接就把这两段补进你自己的 `watch-notify`。
+- **脱敏**：作业脚本按「非通道 / 非家人 / 非生活侧」口径筛过；盘符、机名、真名、主线名一律
+  参数化或占位化，宽词表（纯子串）**0 命中**。
+- **判据**：仓内 `npm test` 全过；全 `jobs/` `node --check` 0 失败；脱敏扫描 `review=0`。
+
 ## 0.3.1 · 2026-11-08
 
 **只动文案与注释，行为一字不变**（补 0.3.0 的脱敏收尾）。

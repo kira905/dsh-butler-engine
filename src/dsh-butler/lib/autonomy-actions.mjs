@@ -281,7 +281,7 @@ export const AUTO_ACTION_KINDS = {
     moduleId: 'p2-watch', moduleKind: 'family',
     familyWhy: '服务面自有闸（服务面配置，不吃生态四键）⇒ 挂 owner:null 的模块（② 包 §7.4 判定①"或"分支）',
     domain: 'service',
-    offSwitch: 'butler-secretary.json#switches.push',
+    offSwitch: 'service-switches.json#switches.push',
     auditStream: 'butler-audit(type=secretary-push-*)',
     quota: 'service-pool',
     guard: { maxAffected: null, allowBatch: false },
@@ -291,7 +291,7 @@ export const AUTO_ACTION_KINDS = {
     moduleId: 'p2-watch', moduleKind: 'family',
     familyWhy: '同上：落库不烧 token、无外部出口，但属服务面写者 ⇒ 挂 owner=null 模块',
     domain: 'service',
-    offSwitch: 'butler-secretary.json#switches.feed',
+    offSwitch: 'service-switches.json#switches.feed',
     auditStream: 'butler-audit(type=secretary-feed-*)',
     quota: 'none',
     guard: { maxAffected: null, allowBatch: false },
@@ -301,7 +301,7 @@ export const AUTO_ACTION_KINDS = {
     moduleId: 'p2-watch', moduleKind: 'family',
     familyWhy: '同上：额度走 service-pool（⑥ 包池子分摊）⇒ 挂 owner=null 模块',
     domain: 'service',
-    offSwitch: 'butler-secretary.json#switches.familyChat',
+    offSwitch: 'service-switches.json#switches.familyChat',
     auditStream: 'butler-audit(type=secretary-answer-*)',
     quota: 'service-pool',
     guard: { maxAffected: null, allowBatch: false },
@@ -311,7 +311,7 @@ export const AUTO_ACTION_KINDS = {
     moduleId: null, moduleKind: 'none',
     moduleWhy: '手工开关 ⇒ 永不自动执行（L3），无 L2 模块可关；登记只为分级映射单源与通知路径共用',
     domain: 'service',
-    offSwitch: 'butler-secretary.json#switches.tunnel',
+    offSwitch: 'service-switches.json#switches.tunnel',
     auditStream: 'butler-audit(type=secretary-tunnel-*)',
     quota: 'none',
     guard: { maxAffected: null, allowBatch: false },
@@ -350,7 +350,7 @@ export const SERVICE_QUOTA_POOLS = Object.freeze(['eco-pool', 'service-pool', 'n
 export const ECOSYSTEM_L1_KEYS = Object.freeze(['p3AutoEnabled', 'p0AutoRestartEnabled', 'p5AutoRollbackEnabled', 'autoHealEnabled', 'p8AutoEnabled']);
 
 /** 关断键是否命中生态四键：命中 ⇒ 返回那个键名，否则 null。
- *  ⚠️ 形态多样（`switches.push` / `butler-secretary.json#switches.push`）⇒ 按**非字母数字下划线分隔取段**比对，
+ *  ⚠️ 形态多样（`switches.push` / `service-switches.json#switches.push`）⇒ 按**非字母数字下划线分隔取段**比对，
  *  不靠整串相等（整串相等会漏掉带前缀 / 带路径的写法 ⇒ 隔离判据形同虚设）。 */
 export function offSwitchHitsEcosystemKeys(offSwitch) {
   if (typeof offSwitch !== 'string') return null;

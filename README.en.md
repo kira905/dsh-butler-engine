@@ -5,10 +5,36 @@
 > switch matrix (who may act on their own, with `by` / `why` on every change) and a hash-chained audit log.
 > Zero runtime dependencies.
 >
-> **What it is not** — It ships **no job scripts**. All 78 jobs in the table stay **off** until you
-> explicitly enable one (otherwise a fresh install would spawn dozens of missing-script failures within
-> minutes). No dashboard, and **no alerting channels** of its own: 0.2.0 adds a **notifier injection
-> point** instead (see below).
+> **What it is not** — It ships **no alerting channels** of its own: 0.2.0 adds a **notifier injection
+> point** instead (see below). And although 0.4.0 bundles a set of job scripts, **every job stays off**
+> until you explicitly enable it.
+
+## 0.4.0 — `jobs/` (optional add-on)
+
+Up to 0.3.x the job table listed 77 jobs while the package carried only 3 scripts — a fresh install
+showed a full schedule with nothing runnable behind it. 0.4.0 bundles **30 scripts covering 41 jobs**
+(full list and per-script environment variables in [`jobs/README.md`](jobs/README.md)).
+
+**Still off by default** — a script being present only means "runnable", not "running".
+
+Entry resolution, first hit wins:
+
+| # | Source |
+|---|---|
+| ① | `<package>/jobs/` (bundled) |
+| ② | env `BUTLER_JOBS_DIR` (your own script directory, absolute path) |
+| ③ | `job.dir` (scripts the core carries) |
+| ④ | none ⇒ `skipped-missing-src`: **not red**, no `failures`, no lock, no spawn |
+
+`butler-tickd --list` marks each job `[jobs]` / `[host-dir]` / `[pkg-dir]` / `[missing-src]`.
+
+**Two scripts are deliberately excluded**: `secretary-morning.mjs` (the morning-report chain needs data
+collection *and* an external push channel — this package ships no channel implementation) and
+`family-vectors-tick.mjs` (it moves family members' private memory data). The remaining 33 jobs belong to
+"your own tree / upstream watch / channels / life side" and are not guessed on your behalf.
+
+`jobs/` is an **optional add-on**: deleting the whole directory only turns those 41 jobs into
+"script missing"; no core component is affected.
 
 ## 0.2.0 — report & patrol toolkit
 

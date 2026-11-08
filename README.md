@@ -64,10 +64,38 @@ await notify({ level: 'warn', title: '卡跑挂了', body: '…', dedupeKey: 'ca
 **看得见，但不假装发出去了**。开关默认关（`<数据根>/butler-alert.json` 里 `channels.alert`），
 同一 `dedupeKey` 同一本地日只真发一次。
 
+## 0.4.0 新增：`jobs/` 作业脚本（可选附带品）
+
+0.3.x 的作业表有 77 条作业，但包里只有 3 个脚本 —— 装完打开看到一片作业、一条也跑不起来。
+0.4.0 把其中 **30 个脚本**补进来，覆盖 **41 条作业**（清单与逐条环境变量见
+[`jobs/README.md`](jobs/README.md)）。
+
+**默认仍然全关**，脚本在位只代表"能跑"，跑不跑由开关决定。
+
+脚本从哪来 —— `butler-tickd` 派活前按三级解析，**前命中即用**：
+
+| 级 | 来源 |
+|---|---|
+| ① | `<包根>/jobs/`（本包附带） |
+| ② | 环境变量 `BUTLER_JOBS_DIR`（你自己那份脚本目录，绝对路径） |
+| ③ | `job.dir`（内核自带脚本） |
+| ④ | 都没有 ⇒ 记 `skipped-missing-src`：**不发红**、不涨 `failures`、不抢锁、不 spawn |
+
+```powershell
+butler-tickd --list     # 每条后面标 [jobs] / [host-dir] / [pkg-dir] / [缺脚本]
+```
+
+**没带的两个**：`secretary-morning.mjs`（早报整条链要取数 + 走外部推送通道，本包不给通道实现）、
+`family-vectors-tick.mjs`（动的是家庭成员的私有记忆数据）。剩下 33 条作业属于「宿主自建 /
+上游观测 / 通道 / 生活侧」，本包不替你猜路径。
+
+`jobs/` 是**可选附带品**：整目录删掉只会让那 41 条作业变成"找不到脚本"，内核件一概不受影响。
+
 ## 怎么接自己的作业（三步）
 
 ```powershell
-# ① 作业脚本放哪都行，调度表里写绝对路径；同目录的写文件名即可
+# ① 作业脚本放哪都行：`<包根>/jobs/` 里放同名文件、或者用 `BUTLER_JOBS_DIR` 指一个目录、
+#    或者调度表里写绝对路径 / 写 `dir: HERE` 放内核目录旁边
 # ② 在 JOBS 表里加一行（源码，一路只会有一处）：
 #    { id: 'my-job', label: '我的作业', intervalMs: 10 * 60_000,
 #      script: 'my-job.mjs', args: ['--once'], dir: HERE }
@@ -95,7 +123,7 @@ setJobEnabled('my-job', true, { by: 'me', why: '第一次接线' });
 # ① 命令在不在
 butler-tickd --help
 
-# ② 作业表读得出来吗（应当看到 78 行，每行带 🔴/🟢）
+# ② 作业表读得出来吗（应当看到 78 行，每行带 🔴/🟢 与入口来源 [jobs]/[缺脚本]…）
 butler-tickd --list
 
 # ③ 心跳与开关现状（JSON；全新机器上 running=false、blocked 全覆盖）

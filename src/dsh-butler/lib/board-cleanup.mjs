@@ -913,9 +913,10 @@ export function diagnoseStall(input = {}) {
   if (!lastCheckAt) return { stalled: true, reason: 'never-run', evidence };
   if (now - lastCheckAt < thresholdMs) return { stalled: false, reason: 'fresh', evidence };
   if (job && job.found === false) return { stalled: true, reason: 'job-missing', evidence };
-  if (job && job.found === true && job.lastStatus && !['ok', 'locked', 'busy', 'deferred'].includes(job.lastStatus)) {
+  if (job && job.found === true && job.lastStatus && !['ok', 'locked', 'busy', 'deferred', 'skipped-missing-src'].includes(job.lastStatus)) {
     // 【卡 AT19】'deferred' = tickd 按 job 声明的 benignExitCodes 记下的"让路/未完成"（当前仅 hot），
     //   与 locked/busy 同属"这一轮没干成但 job 没坏"，不算失败（否则会把停摆归因指错方向）。
+    // 【B7】'skipped-missing-src' = tickd 三级解析没找到作业脚本 ⇒ "没装这件东西"，更不是失败。
     return { stalled: true, reason: 'job-failing', evidence };
   }
   if (!queueLastTickAt || now - queueLastTickAt >= thresholdMs) return { stalled: true, reason: 'collect-failed', evidence };

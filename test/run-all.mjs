@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const suites = ['smoke.mjs', 'notify-seam.mjs', 'handoff-core.mjs'];
+const suites = ['smoke.mjs', 'notify-seam.mjs', 'handoff-core.mjs', 'job-resolve.mjs'];
 let failed = 0;
 for (const s of suites) {
   console.log(`\n=== ${s} ===`);

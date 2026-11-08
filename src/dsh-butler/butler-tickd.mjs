@@ -91,6 +91,57 @@ const DSH = process.env.BUTLER_ROOT || path.join(os.homedir(), 'dsh');
 const PANEL = path.join(DSH, 'tools', 'dsh-butler-panel');
 const NODE_EXE = process.execPath;
 /**
+ * 【B7 · 作业脚本开源批】包内附带的作业脚本目录（`<包根>/jobs`）。
+ *
+ * 分层口径：**作业是可选附带品，与内核分层** —— 整目录可以删（删了就回到"只有作业表、
+ * 没有作业脚本"的旧形态），也不会影响内核自己那三个自持脚本。
+ */
+export const JOBS_DIR = path.join(HERE, '..', '..', 'jobs');
+/** 宿主自备作业脚本目录的环境变量名（绝对路径；未设 = 没有这一级）。 */
+export const JOBS_DIR_ENV = 'BUTLER_JOBS_DIR';
+
+const isFile = (p) => { try { return fs.statSync(p).isFile(); } catch { return false; } };
+
+/**
+ * 作业入口的三级解析 —— **单一判定点**（runJob 与 `--status` 的"脚本在不在"必须同源）。
+ *
+ * 顺序（前命中即用）：
+ *   ① 包内附带 `jobs/`（`JOBS_DIR`）
+ *   ② 宿主自备脚本目录（环境变量 `BUTLER_JOBS_DIR`，绝对路径）
+ *   ③ 既有口径：`job.dir`（内核自带脚本 / 宿主自建树）
+ *   ④ 都没有 ⇒ `{ ok: false, reason: 'missing' }` ⇒ runJob 记 `skipped-missing-src`
+ *      （**不发红**：不涨 failures、不进 last-error、不抢锁、不 spawn）
+ *
+ * `script` 给绝对路径时照用（旧表里 `path.join(DSH, 'tools', …)` 那一批就是这种形态）。
+ *
+ * @param {{script?:string, dir?:string}} job
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {{ok:true, entry:string, source:'absolute'|'jobs'|'host-dir'|'pkg-dir'}
+ *          | {ok:false, reason:string, tried?:string[]}}
+ */
+export function resolveJobEntry(job, env = process.env) {
+  const raw = String(job?.script ?? '').trim();
+  if (!raw) return { ok: false, reason: 'empty-script' };
+  const tried = [];
+  const consider = (p, source) => {
+    tried.push(p);
+    return isFile(p) ? { ok: true, entry: p, source } : null;
+  };
+  if (path.isAbsolute(raw)) {
+    const hit = consider(raw, 'absolute');
+    return hit ?? { ok: false, reason: 'missing', tried };
+  }
+  let hit = consider(path.join(JOBS_DIR, raw), 'jobs');                                  // ①
+  if (hit) return hit;
+  const envDir = String(env?.[JOBS_DIR_ENV] ?? '').trim();
+  if (envDir) {                                                                          // ②
+    hit = consider(path.resolve(envDir, raw), 'host-dir');
+    if (hit) return hit;
+  }
+  hit = consider(path.resolve(job?.dir ?? HERE, raw), 'pkg-dir');                        // ③
+  return hit ?? { ok: false, reason: 'missing', tried };
+}
+/**
  * 【卡 S5·T2b（2026-09-17）】tick **锁包装层**入口。
  *
  * 缺口（H1b-prep §七 遗留项 3）：`watchfs` / `daily` / `weekly` / `imagegen*` 的脚本本体
@@ -348,7 +399,7 @@ export const JOBS = [
   //      ⇒ 方案 §2 已标为「窗口踩线」风险点，兜底 = 早报末行「回「1」可续期」提示。
   //   ⚠️ **默认关**（交付/放行分离，R3 锁后交付）：本行只落*表位*，不自动开跑。
   //      放行 = `node tools\dsh-butler\butler-autonomy-cli.mjs job on secretary-morning --reason "..."`（**只改开关不改代码**）；
-  //      开跑前还须确认闸文件 `~/.dsh/butler-secretary.json#switches.push` 为 true（出口每次先读它）。
+  //      开跑前还须确认闸文件 `~/.dsh/service-switches.json#switches.push` 为 true（出口每次先读它）。
   //   ⚠️ 出口唯一：本 job 只调 `secretary-morning.mjs`（取数），真正发送/闸门/预算/台账全在宿主侧的通道脚本里（不进本包）。
   { id: 'secretary-morning', label: '服务面早报（外部通道推送 · 默认关）', at: '09:05', initialMs: 0,
     script: 'secretary-morning.mjs', args: [], dir: HERE },
@@ -786,6 +837,8 @@ export const JOBS = [
   //     不挂 job 就只剩"人想起来跑"，而"体检没跑"正是这条链唯一会静默失效的态。
   //   红项口径：`--all` 的 rc=3 = 有红项（假撤回 / 关系脏边 / 老账基线漂移），**故意不设 benignExitCodes**
   //     ⇒ 红项算 failure，要能在日报的 job 段看见（这正是挂 job 的目的，别把它降格成让路）。
+  //   【B7】唯一的例外是 **rc=4**：被调脚本（宿主自建工具集，本包不附带）不在位 ⇒ 记让路。
+  //     单开一个码是为了不碰 rc=3 的失败语义（混用会让红项看起来像让路）。
   //   ⚠️ **默认关（交付纪律：新自治动作默认关）**：`defaultWhenUnset:'off'` ⇒ 对端机器缺覆盖项时不跑；
   //     放行 = `butler-autonomy-cli.mjs job on memory-change-audit --reason "…"`。
   //   ⚠️ 必须重启 tickd 常驻进程才生效（JOBS 是启动期常量）：`--stop` + `--ensure`（不碰 dsh，不走 P0）。
@@ -793,9 +846,10 @@ export const JOBS = [
   { id: 'memory-change-audit', label: '记忆留痕体检（只读 · 每天一次 · 默认关）',
     intervalMs: 24 * 60 * MIN, initialMs: 4_320_000,
     defaultWhenUnset: 'off',
-    script: 'memory-change-audit-tick.mjs', args: [], dir: HERE },
+    script: 'memory-change-audit-tick.mjs', args: [], dir: HERE,
+    benignExitCodes: [4], benignExitLabel: '被调脚本不在位（宿主自建工具集，本包不附带）⇒ 本轮让路；rc=3「有红项」不在此列' },
   { id: 'memory-vectors', label: '记忆向量同步（编码桥 + 增量同步 · 默认关）', intervalMs: 60 * MIN, initialMs: 510_000,
-    script: 'butler-memory-vectors-tick.mjs', args: ['--allow-host', '<host-a>,<host-b>'], dir: HERE,
+    script: 'butler-memory-vectors-tick.mjs', args: ['--allow-host', os.hostname()], dir: HERE,
     benignExitCodes: [3], benignExitLabel: '宿主未声明 / 记忆库不存在 / 引擎入口缺失 ⇒ 安全跳过（不建库、不报红）' },
   // ── 2026-10-11（卡「跨机记忆库每小时自动同步」· 操作者 01:11 令）───────────────────────────
   //   语义 = 每小时一次跨机记忆库**双向收敛**（各机各跑一半，形态见 `mem-sync-tick.mjs` 头注释）：
@@ -891,11 +945,12 @@ export const JOBS = [
   { id: 'family-vectors', label: '家人记忆向量同步（逐库增量 · 默认关）',
     intervalMs: 60 * MIN, initialMs: 1_310_000,
     script: 'family-vectors-tick.mjs', dir: HERE,
-    // —— 路线 (乙)（已落 · 在用）：<host> tickd + ssh 代跑对端现成 0.1.1（对端零改动）
-    args: ['--apply', '--exec', 'ssh', '--remote', '<peer-lan>', '--remote-fallback', '<peer>',
-      '--allow-host', '<host-b>'],
+    // —— 路线 (乙)（已落 · 在用）：本机 tickd + ssh 代跑对端现成实现（对端零改动）
+    //   【B7】`--remote` / `--remote-fallback` / `--allow-host` 三个值都是**你这套拓扑里的真名**，
+    //   开源版刻意不给默认值（给了就是替别人猜机器名）⇒ 本行 `args: []`，要跑这条就把三项自己补上。
+    args: [],
     // —— 路线 (甲)（备选 · 落地时另抄一份调度项到对端 tickd）：
-    // args: ['--apply', '--exec', 'local', '--allow-host', '<host-b>'],
+    // args: ['--apply', '--exec', 'local', '--allow-host', os.hostname()],
     budgetMs: 2_700_000, defaultWhenUnset: 'off',
     benignExitCodes: [3], benignExitLabel: '锁被占 / 对端不可达 ⇒ 本轮让路（不计失败）' },
 
@@ -918,9 +973,15 @@ export const JOBS = [
   //   ⚠️ **必须重启 tickd 才生效**（JOBS 是模块级常量；`--status`/`--list` 是新进程读当前代码）。
   //      A14 卡**刻意不重启**：本条只"上表"，真正生效窗口留给 S4 —— 看到 `--status` 里有它**不等于**它已经在跑。
   //   回滚（一行）：删掉本条 + 重启 tickd（`--stop` 后由守护鱼 30s 内 `--ensure`，或显式 `--ensure`）。
-  { id: 'memory-sync-leaf', label: '<host>→<host> 叶子推送（单向 · 15 分钟 · 默认关）', intervalMs: 15 * MIN, initialMs: 900_000,
+  { id: 'memory-sync-leaf', label: '记忆快照单向叶子推送（15 分钟 · 默认关）', intervalMs: 15 * MIN, initialMs: 900_000,
     script: 'mem-push-leaf.mjs',
-    args: ['--peer-lan', '<peer-lan>', '--peer-tunnel', '<peer>', '--apply', '--tmp-dir', path.join(TEMP, 'dsh-mem-sync-leaf')],
+    // 【B7】对端别名不猜：`BUTLER_PEER_LAN` / `BUTLER_PEER` 给了才拼进 args（见 lib/host-config.mjs 口径）。
+    //   一个都不给 ⇒ 本行只带 `--apply`，脚本会打用法错并退出 —— 比拿一个假别名去连网强。
+    args: [
+      ...(process.env.BUTLER_PEER_LAN ? ['--peer-lan', process.env.BUTLER_PEER_LAN] : []),
+      ...(process.env.BUTLER_PEER ? ['--peer-tunnel', process.env.BUTLER_PEER] : []),
+      '--apply', '--tmp-dir', path.join(TEMP, 'dsh-mem-sync-leaf'),
+    ],
     dir: HERE, defaultWhenUnset: 'off',
     benignExitCodes: [3], benignExitLabel: '对端不可达 ⇒ 安全跳过（<host> 进网后自动收敛）' },
   // ── 2026-10-22（卡「素材库中心化」· 方案 §3.5「每小时一轮 + 开机后一轮」）────────────────
@@ -2346,6 +2407,21 @@ function runJob(job, now) {
   const t0 = now;
   let state = readState() ?? {};
 
+  // ---- 【B7】三级解析：脚本不在位 ⇒ `skipped-missing-src`（不发红：不涨 failures、
+  //      不抢锁、不 spawn）。理由：开源包默认**不附带**大部分作业脚本，装完看到 46 条作业表
+  //      是设计如此；真跑不起来的必须看得见、但不许变成一片红。
+  const entry = resolveJobEntry(job);
+  if (!entry.ok) {
+    stampJob(state, job.id, {
+      running: false,
+      lastStatus: 'skipped-missing-src',
+      lastError: `作业脚本不在位（${entry.reason}）—— 已试 ${(entry.tried ?? []).join(' | ') || '（无候选）'}`,
+      lastEndAt: new Date().toISOString(),
+    });
+    log(`job ${job.id}: 跳过 —— 作业脚本不在位（${entry.reason}）`);
+    return null;
+  }
+
   // ---- T2 ①：调度器抢真实锁（跨入口单例；抢不到跳过）
   const got = acquireJobLock(job);
   if (!got.ok) {
@@ -2383,13 +2459,15 @@ function runJob(job, now) {
   //   ⚠️ 包装层要**绝对路径**：它靠摆 process.argv[1] 让目标脚本的 isMainEntry 守卫命中，
   //      相对路径会按包装层自己的 cwd 解析（未必等于 job.dir）—— 这里按本文件同款口径先解析。
   const viaRunner = usesLockRunner(job.id);
-  const scriptAbs = viaRunner ? path.resolve(job.dir ?? HERE, job.script) : job.script;
+  // 【B7】一律用三级解析出来的**绝对**入口：包装层靠摆 process.argv[1] 让目标脚本的 isMainEntry
+  //   守卫命中，相对路径会按包装层自己的 cwd 解析（未必等于 job.dir）。
+  const scriptAbs = entry.entry;
   const spawnArgv = viaRunner
     ? [TICK_JOB_RUNNER, '--job', job.id, '--script', scriptAbs, ...(job.args ?? [])]
-    : [job.script, ...(job.args ?? [])];
+    : [scriptAbs, ...(job.args ?? [])];
   // lastVia：state.json 里能直接看出这个 job 本轮走的是哪条入口（验收 / 排障用）
   stampJob(state, job.id, { running: true, lastStartAt: new Date(now).toISOString(), lastLockName: got.lockName, ttlMs: got.ttlMs,
-    lastVia: viaRunner ? 'tick-job-runner' : 'direct' });
+    lastVia: viaRunner ? 'tick-job-runner' : 'direct', lastEntrySource: entry.source });
   let child;
   // 【卡 冲刺600·tickd失败留痕】输出尾部捕获器（stdout/stderr 各一个）：内存上限恒定
   //   （默认每流 64 KB，只保留尾部），不落盘、不做 I/O —— 见 lib\tickd-fail-trace.mjs 头注释。
@@ -3183,13 +3261,27 @@ async function main() {
     console.log('');
     console.log('调度表（JOBS）：');
     for (const j of JOBS) console.log(`  ${j.id.padEnd(16)} ${describeSchedule(j).padEnd(30)} ${j.label}  →  ${j.script}`);
+    console.log('');
+    console.log('作业脚本从哪来（三级解析，前命中即用）：');
+    console.log('  ① 包内附带  <包根>/jobs/');
+    console.log(`  ② 宿主自备  环境变量 ${JOBS_DIR_ENV}（绝对路径）`);
+    console.log('  ③ 内核位置  job.dir（内核自带脚本 / 宿主自建树）');
+    console.log('  ④ 都没有    ⇒ 记 skipped-missing-src（不发红、不涨失败、不 spawn）');
     return 0;
   }
   if (argv.includes('--list')) {
     const gates = resolveJobGates(JOBS);
+    let missing = 0;
     for (const j of JOBS) {
       const g = gates.gates[j.id];
-      console.log(`${j.id.padEnd(14)} ${describeSchedule(j).padEnd(10)} ${(g?.enabled ? '🟢' : '🔴')} ${j.label}  →  ${j.script}`);
+      const e = resolveJobEntry(j);
+      if (!e.ok) missing += 1;
+      const mark = e.ok ? `[${e.source}]` : '[缺脚本]';
+      console.log(`${j.id.padEnd(14)} ${describeSchedule(j).padEnd(10)} ${(g?.enabled ? '🟢' : '🔴')} ${mark.padEnd(11)} ${j.label}  →  ${j.script}`);
+    }
+    if (missing) {
+      // 走 stderr：`--list` 的 stdout 必须保持「一行一条作业」（有单测按行数对 JOBS 条数）。
+      console.error(`ℹ️ ${missing} / ${JOBS.length} 条作业找不到脚本（skipped-missing-src，不算失败）—— 装齐办法见 jobs/README.md 或用 ${JOBS_DIR_ENV} 指向你自己的脚本目录。`);
     }
     if (gates.module?.enabled !== true) console.log(`⚠️ 模块 tickd-jobs 总闸=关（${gates.module?.source}）→ 全部 job 停跑`);
     return 0;

@@ -385,7 +385,7 @@ export const LOCK_REGISTRY = [
   //      秒级；给足余量。
   { job: 'secretary-morning', lockName: 'secretary-morning', script: 'secretary-morning.mjs', ttlMs: 600_000, intervalMs: 0,
     critical: ['~/.dsh/secretary-push.jsonl（推送台账 · **追加写**）',
-      '~/.dsh/butler-secretary.json（读总闸 `switches.push` + 写对账历史 `reconcile`）',
+      '~/.dsh/service-switches.json（读总闸 `switches.push` + 写对账历史 `reconcile`）',
       'docs/（**只读**：早报取数源）'],
     skipPolicy: 'skip', source: 'tickd',
     lockRunner: true, lockRunnerReason: '脚本自身无锁：取数层可被手工直跑（node secretary-morning.mjs）与 tick 调度并发，共用同一份台账与闸文件' },

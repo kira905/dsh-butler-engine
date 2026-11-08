@@ -74,7 +74,11 @@ export const FAIL_RED_THRESHOLD = 5;
 //   （当前仅 `hot`：热采 exit 3 = 抢不到交接锁 / 双开嫌疑 fail-closed / 推前安全门拦住整仓推送），
 //   与 locked/busy **同类语义**（"这一轮没干成，但不是它坏了"），故一并排除出失败计分。
 //   未声明 `benignExitCodes` 的 job 永远不会产出该状态（它们的非 0 码仍是 `exit-<n>`，照旧报红）。
-export const BENIGN_STATUSES = ['locked', 'busy', 'deferred'];
+// 【B7（2026-11-09）】追加 `skipped-missing-src` —— tickd 三级解析（jobs/ → BUTLER_JOBS_DIR →
+//   job.dir）找不到作业脚本时的状态。开源包默认**不附带**大部分作业脚本，这是"没装这件东西"
+//   而不是"这东西坏了" ⇒ 与 locked/busy **同类**：不涨 failures、不计入失败。真坏了仍是
+//   `exit-<n>` / `spawn-error`（照旧报红）。
+export const BENIGN_STATUSES = ['locked', 'busy', 'deferred', 'skipped-missing-src'];
 
 /** 连续让路达到该次数 → 从 ✅ 升为 🟡（"一直没完成"要看得见，但仍不计失败、不进红档）。 */
 export const BENIGN_STREAK_WARN = 3;
