@@ -198,7 +198,7 @@ export const MAINTENANCE_SILENCE_WHITELIST = [
 
 // ══════════════════════════════════════════════════════════════════════════
 // ★ 策略文件读取入口（`~/.dsh/butler-restart-policy.json`）
-//   卡【G33·重启闸门加急档】**A4 放行** / 2026-09-28 · 工作 ROG
+//   卡【G33·重启闸门加急档】**A4 放行** / 2026-09-28
 //   真源：`docs/` §3.3（策略键）+ §10 A4 行 + §11.1 拍板值
 //
 //   为什么要有这一层：`DEFAULT_POLICY` 的注释从 A1 起就承诺「可被 butler-restart-policy.json 覆盖」，

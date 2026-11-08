@@ -137,7 +137,7 @@ export const ENV_EXIT_TABLE = Object.freeze([
   { job: 'memory-vectors', codes: [3], label: '宿主未声明 / 记忆库不存在 / 引擎入口缺失 ⇒ 安全跳过（不建库、不报红）', file: 'tools\\dsh-butler\\butler-tickd.mjs', line: 765 },
   { job: 'memory-sync', codes: [3], label: '对端不可达 / 角色未声明 / inbox 无快照 ⇒ 安全跳过（家网恢复自动收敛）', file: 'tools\\dsh-butler\\butler-tickd.mjs', line: 798 },
   { job: 'memory-sync-life', codes: [3], label: '对端（<peer> 生活实例）不可达/无通道 ⇒ 本轮让路（她那边开机/进网后自动收敛）', file: 'tools\\dsh-butler\\butler-tickd.mjs', line: 841 },
-  { job: 'memory-sync-leaf', codes: [3], label: '对端不可达 ⇒ 安全跳过（TUF 进网后自动收敛）', file: 'tools\\dsh-butler\\butler-tickd.mjs', line: 866 },
+  { job: 'memory-sync-leaf', codes: [3], label: '对端不可达 ⇒ 安全跳过（对端进网后自动收敛）', file: 'tools\\dsh-butler\\butler-tickd.mjs', line: 866 },
   { job: 'secretary-sync', codes: [3, 6], label: '对端不可达 / 上一轮仍在跑 ⇒ 本轮让路', file: 'tools\\dsh-butler\\butler-tickd.mjs', line: 891 },
   { job: 'upgrade-watch', codes: [3], label: '本地基线缺失（未跑过采集/无 packages 基线）⇒ 安全跳过（不计 failures）', file: 'tools\\dsh-butler\\butler-tickd.mjs', line: 1184 },
   { job: 'relay-keepalive', codes: [3], label: '端到端探针外部阻塞（<peer> 关机 / 不在家网 / VPS 转发断）⇒ 本轮让路', file: 'tools\\dsh-butler\\butler-tickd.mjs', line: 1419 },

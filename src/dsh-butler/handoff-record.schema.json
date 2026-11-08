@@ -1,0 +1,278 @@
+{
+  "title": "dsh-butler handoff record (P9 §5.4)",
+  "description": "字段白名单。写交接单前按本 schema 校验，多余字段直接拒绝写入。绝不写生产绝对路径 / 密钥 / 会话内容 / 浏览器 URL。",
+  "x-schema-subset": "本文件只使用 JSON Schema 的一个子集：type / enum / required / properties / additionalProperties / items / maxItems / maxLength（由 lib/handoff-core.mjs 的 validateRecord 解释）。",
+  "$comment": "synced with docs/大管家v2.5-P9会交接与云中继方案-20260910.md §5.4 字段表；schemaVersion 变更必须配 migrate（butler-store 契约）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "host",
+    "role",
+    "startedAt",
+    "finishedAt",
+    "result",
+    "repos",
+    "applied",
+    "alerts",
+    "lastHeartbeatAt",
+    "lastSuccessfulHandoffAt"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "integer", "enum": [1] },
+    "host": { "type": "string", "maxLength": 64 },
+    "role": { "type": "string", "enum": ["arrive", "depart"] },
+    "startedAt": { "type": "string", "maxLength": 40 },
+    "finishedAt": { "type": ["string", "null"], "maxLength": 40 },
+    "result": { "type": "string", "enum": ["ok", "deferred", "failed"] },
+    "repos": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "localHead", "remoteHead", "behind", "ahead", "pushed", "sizeBytes"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 64 },
+          "localHead": { "type": ["string", "null"], "maxLength": 64 },
+          "remoteHead": { "type": ["string", "null"], "maxLength": 64 },
+          "behind": { "type": ["integer", "null"] },
+          "ahead": { "type": ["integer", "null"] },
+          "pushed": { "type": "boolean" },
+          "sizeBytes": { "type": ["integer", "null"] },
+          "gitBytes": { "type": ["integer", "null"] }
+        }
+      }
+    },
+    "volumes": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["repo", "sizeBytes", "files", "thresholdBytes", "overThreshold"],
+        "properties": {
+          "repo": { "type": "string", "maxLength": 64 },
+          "sizeBytes": { "type": "integer" },
+          "files": { "type": "integer" },
+          "thresholdBytes": { "type": ["integer", "null"] },
+          "overThreshold": { "type": "boolean" },
+          "gitBytes": { "type": ["integer", "null"] },
+          "quotaRatio": { "type": ["number", "null"] },
+          "remainBytes": { "type": ["integer", "null"] },
+          "level": { "type": ["string", "null"], "maxLength": 16 }
+        }
+      }
+    },
+    "dshVersion": { "type": ["string", "null"], "maxLength": 64 },
+    "pluginVersions": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "maxLength": 64 }
+    },
+    "handoffVersion": { "type": ["string", "null"], "maxLength": 64 },
+    "minSupported": { "type": ["string", "null"], "maxLength": 64 },
+    "versionGate": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["decision", "reason", "verdict", "needHumanConfirm", "peerHost"],
+      "properties": {
+        "decision": { "type": "string", "maxLength": 32 },
+        "reason": { "type": "string", "maxLength": 320 },
+        "verdict": { "type": ["string", "null"], "maxLength": 32 },
+        "needHumanConfirm": { "type": "boolean" },
+        "peerHost": { "type": ["string", "null"], "maxLength": 64 },
+        "diffs": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "self", "peer", "verdict"],
+            "properties": {
+              "key": { "type": "string", "maxLength": 64 },
+              "self": { "type": ["string", "null"], "maxLength": 64 },
+              "peer": { "type": ["string", "null"], "maxLength": 64 },
+              "verdict": { "type": "string", "maxLength": 32 }
+            }
+          }
+        }
+      }
+    },
+    "hotCollect": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["at", "result", "copiedFiles", "movedSessions", "openSkipped", "ledgerRevision"],
+      "properties": {
+        "at": { "type": ["string", "null"], "maxLength": 40 },
+        "result": { "type": ["string", "null"], "maxLength": 32 },
+        "copiedFiles": { "type": ["integer", "null"] },
+        "movedSessions": { "type": ["integer", "null"] },
+        "openSkipped": { "type": ["integer", "null"] },
+        "ledgerRevision": { "type": ["integer", "null"] }
+      }
+    },
+    "clockSkew": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["selfSkewMs", "peerSkewMs", "limitMs", "ok"],
+      "properties": {
+        "selfSkewMs": { "type": ["integer", "null"] },
+        "peerSkewMs": { "type": ["integer", "null"] },
+        "limitMs": { "type": ["integer", "null"] },
+        "ok": { "type": ["boolean", "null"] }
+      }
+    },
+    "merged": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "added", "changed", "skipped"],
+        "properties": {
+          "file": { "type": "string", "maxLength": 256 },
+          "added": { "type": "integer" },
+          "changed": { "type": "integer" },
+          "skipped": { "type": "integer" }
+        }
+      }
+    },
+    "applied": {
+      "type": "array",
+      "maxItems": 4000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "repoPath", "sha256", "ok", "status", "mode", "bytes"],
+        "properties": {
+          "key": { "type": "string", "maxLength": 320 },
+          "repoPath": { "type": "string", "maxLength": 320 },
+          "sha256": { "type": ["string", "null"], "maxLength": 64 },
+          "ok": { "type": "boolean" },
+          "status": {
+            "type": "string",
+            "enum": [
+              "applied",
+              "unchanged",
+              "skipped-diverged",
+              "skipped-unrecorded",
+              "skipped-missing-src",
+              "skipped-repo-drift",
+              "skipped-no-bom",
+              "failed",
+              "collected"
+            ]
+          },
+          "mode": { "type": "string", "enum": ["arrive-distribute", "depart-collect"] },
+          "bytes": { "type": "integer" }
+        }
+      }
+    },
+    "bootstrap": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item", "ok"],
+        "properties": {
+          "item": { "type": "string", "maxLength": 160 },
+          "ok": { "type": "boolean" }
+        }
+      }
+    },
+    "sessions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok"],
+      "properties": {
+        "ok": { "type": "boolean" },
+        "reason": { "type": ["string", "null"], "maxLength": 160 },
+        "skipped": { "type": "boolean" },
+        "mergedCount": { "type": "integer" },
+        "keptCount": { "type": "integer" },
+        "skippedArchivedCount": { "type": "integer" },
+        "repoHead": { "type": ["string", "null"], "maxLength": 64 },
+        "durationMs": { "type": "integer" }
+      }
+    },
+    "merge": {
+      "$comment": "A5b 离线语义合并（H2 接线 2026-09-15）：坑库 + 记忆库。门 / 单写者护栏 / 结果计数都在这里；任何失败 fail-open（只影响本字段与 alerts/deferred，不影响 Arrive 结果）。",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["enabled", "skipped", "reason", "clockOk", "decryptOk", "writers", "pitfalls", "memory", "durationMs", "budgetMs"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "skipped": { "type": "boolean" },
+        "reason": { "type": ["string", "null"], "maxLength": 300 },
+        "clockOk": { "type": ["boolean", "null"] },
+        "decryptOk": { "type": ["boolean", "null"] },
+        "writers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["held", "active", "reasons", "waitedMs"],
+          "properties": {
+            "held": { "type": "boolean" },
+            "active": { "type": "boolean" },
+            "reasons": { "type": ["string", "null"], "maxLength": 300 },
+            "waitedMs": { "type": "integer" }
+          }
+        },
+        "pitfalls": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ok", "skipped", "reason", "written", "entries", "sumCount", "unionEntries", "inserted", "autoRenamed", "durationMs"],
+          "properties": {
+            "ok": { "type": "boolean" },
+            "skipped": { "type": "boolean" },
+            "reason": { "type": ["string", "null"], "maxLength": 200 },
+            "written": { "type": "boolean" },
+            "entries": { "type": ["integer", "null"] },
+            "sumCount": { "type": ["integer", "null"] },
+            "unionEntries": { "type": ["integer", "null"] },
+            "inserted": { "type": ["integer", "null"] },
+            "autoRenamed": { "type": ["integer", "null"] },
+            "durationMs": { "type": "integer" }
+          }
+        },
+        "memory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ok", "skipped", "reason", "written", "entries", "sumCount", "unionEntries", "inserted", "autoRenamed", "durationMs"],
+          "properties": {
+            "ok": { "type": "boolean" },
+            "skipped": { "type": "boolean" },
+            "reason": { "type": ["string", "null"], "maxLength": 200 },
+            "written": { "type": "boolean" },
+            "entries": { "type": ["integer", "null"] },
+            "sumCount": { "type": ["integer", "null"] },
+            "unionEntries": { "type": ["integer", "null"] },
+            "inserted": { "type": ["integer", "null"] },
+            "autoRenamed": { "type": ["integer", "null"] },
+            "durationMs": { "type": "integer" }
+          }
+        },
+        "durationMs": { "type": "integer" },
+        "budgetMs": { "type": "integer" }
+      }
+    },
+    "handedOffSessions": { "type": "array", "maxItems": 512, "items": { "type": "string", "maxLength": 80 } },
+    "deferred": { "type": "array", "maxItems": 128, "items": { "type": "string", "maxLength": 256 } },
+    "alerts": {
+      "type": "array",
+      "maxItems": 512,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["level", "code", "message"],
+        "properties": {
+          "level": { "type": "string", "enum": ["info", "warn", "alert"] },
+          "code": { "type": "string", "maxLength": 64 },
+          "message": { "type": "string", "maxLength": 300 }
+        }
+      }
+    },
+    "lastHeartbeatAt": { "type": ["string", "null"], "maxLength": 40 },
+    "lastSuccessfulHandoffAt": { "type": ["string", "null"], "maxLength": 40 }
+  }
+}

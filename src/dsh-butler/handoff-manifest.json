@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "note": "P9 H1a 落地层分发清单（机器可读）。key 跨机同义 = <anchor>:<生产相对路径>；anchor: dsh = 家目录下 .dsh，ws = 数据区根。清单只写锚点 + 相对路径，绝不写生产绝对路径。分发语义 = 覆盖/新增（无 purge、无删除），且必须过 §17.1 T3 对偶门。",
+  "expansionNote": "dir 条目按 src 目录递归展开（跳过 node_modules/.git/_archive/_tmp/generated/logs/snapshots/backups 与 *.bak*/*.tmp 等）。仓库工作副本根 = <工作副本根>/<repo>（见 $BUTLER_REPO_ROOT）。",
+  "h1aBoundaryNote": "H1a 只启用不触发 P5 磁盘层审计的路径（tools/dsh-butler 是 butler-write-paths 的自指豁免项）。persona / skills / docs 属 A 层与 B 层受管对象，启用前必须先做方案 §5.5 的三层豁免（H1b/H4）。",
+  "h3Note": "2026-09-16（P9 H3）：① 新增 6 条**文件级启动链条目**（ws:dsh-{start,shutdown,restart}.{ps1,cmd}）取代原来 enabled:false 的整目录条目 ws:root-launchers —— 2026-09-15 换机实测「仓3 与生产的启动链 sha 完全一致，但 Arrive 从来不分发它们」，根因就是整目录条目被 P5 顾虑挡住而整条禁用。② .ps1 的分发有 **UTF-8 BOM 门**（源缺 BOM → skipped-no-bom 拒绝覆盖 + 🔴 告警；写后读回校验）。③ 文件级分发会写 A 层保护区 → P5 侧按 §5.5 第①层给了**窗口豁免**能力（isButlerWritten(p,{handoffActive:true})，默认不生效，接线在 H4）。",
+  "h4bNote": "2026-09-21（P9 H4b · Arrive-B 跨机缺口治本）：新增 4 条**文件级** tools/ 根条目（board-merge / board-snapshot-export / attachments-audit / attachments-fetch）。为什么是它们：Arrive-B（handoff-arrive-b.mjs）直接 spawn board-merge.mjs（账本并回）与 attachments-audit.mjs（附件对账）、报告里印的补齐命令指向 attachments-fetch.mjs；Depart ②c 直接 spawn board-snapshot-export.mjs 产快照（= Arrive-B 的输入侧）。这 4 个文件在 tools/ 根，**不在** A6 既有清单里（清单只含 ws:tools/dsh-butler + ws:tools/lib + butler-version.json + 6 个启动脚本），而 A6b（lib/handoff-adopt.mjs 的 ADOPT_ALLOW 含 /^tools\\//）**默认 report-only** ⇒ 实测对端 3/4 个文件仍是旧版、永久到不了。为什么不放行 A6b：A6b 放行 = 整个 tools/** + docs/** + dsh/skills/** 的仓侧 diff 全部自动写生产（docs 是 P5 B 层审计对象、skills 是 A 层保护区），爆炸半径远大于补 4 个工具；这 4 条走 A6 = 复用既有 T3 对偶门 + 逐文件备份 + 一键恢复脚本 + BOM 门（.mjs 不设 BOM 门，实证见 _test/test-handoff-h3.mjs ①）。首次分发基线说明：目标已存在且内容与仓不同、而本条目从来没有交接基线 ⇒ T3 门判 skipped-unrecorded（fail-closed），需一次 --arrive --adopt-unrecorded（人工确认），或先把对端定向补齐到与仓一致（后者即本卡 H4b 的实投做法，投完 A6 判 unchanged）。",
+  "entries": [
+    {
+      "key": "ws:tools/dsh-butler",
+      "repo": "dsh-workspace",
+      "repoPath": "tools/dsh-butler",
+      "anchor": "ws",
+      "rel": "tools/dsh-butler",
+      "type": "dir",
+      "enabled": true,
+      "note": "交接器本体与 butler-core 全套（P5 自指豁免区，分发不触发磁盘层审计）"
+    },
+    {
+      "key": "ws:tools/lib",
+      "repo": "dsh-workspace",
+      "repoPath": "tools/lib",
+      "anchor": "ws",
+      "rel": "tools/lib",
+      "type": "dir",
+      "enabled": true,
+      "note": "共享库（repo-superset 判定等；交接器体检与被检对象同源）"
+    },
+    {
+      "key": "dsh:butler-version.json",
+      "repo": "dsh-core",
+      "repoPath": "dsh/butler-version.json",
+      "anchor": "dsh",
+      "rel": "butler-version.json",
+      "type": "file",
+      "enabled": true,
+      "note": "butler 产品版本声明（state-files 判 sync:true，跨机应一致）"
+    },
+    {
+      "key": "ws:tools/board-merge.mjs",
+      "repo": "dsh-workspace",
+      "repoPath": "tools/board-merge.mjs",
+      "anchor": "ws",
+      "rel": "tools/board-merge.mjs",
+      "type": "file",
+      "enabled": true,
+      "note": "H4b：Arrive-B 的账本并回执行器（走 Host HTTP API；自带账本备份 + restore.mjs）。缺它/版本旧 ⇒ arrive-b 在 apply/dry-run 门直接挂或用旧协议"
+    },
+    {
+      "key": "ws:tools/board-snapshot-export.mjs",
+      "repo": "dsh-workspace",
+      "repoPath": "tools/board-snapshot-export.mjs",
+      "anchor": "ws",
+      "rel": "tools/board-snapshot-export.mjs",
+      "type": "file",
+      "enabled": true,
+      "note": "H4b：Depart ②c 的快照导出器（handoff.mjs 直接 spawn）；它是 Arrive-B 的输入产出侧 —— 对端缺它 ⇒ 对端的快照出不来 ⇒ 本机 arrive-b 没有输入"
+    },
+    {
+      "key": "ws:tools/attachments-audit.mjs",
+      "repo": "dsh-workspace",
+      "repoPath": "tools/attachments-audit.mjs",
+      "anchor": "ws",
+      "rel": "tools/attachments-audit.mjs",
+      "type": "file",
+      "enabled": true,
+      "note": "H4b：Arrive-B 的附件差额头（只读对账，rc=3 表示有缺失）。缺它 ⇒ arrive-b 报告里那条附件差额静默变成「脚本不存在」"
+    },
+    {
+      "key": "ws:tools/attachments-fetch.mjs",
+      "repo": "dsh-workspace",
+      "repoPath": "tools/attachments-fetch.mjs",
+      "anchor": "ws",
+      "rel": "tools/attachments-fetch.mjs",
+      "type": "file",
+      "enabled": true,
+      "note": "H4b：arrive-b 报告与 attachments-audit 输出里印出的**补齐命令**目标（人手工跑）。缺它 ⇒ 报告给的命令在对端直接 MODULE_NOT_FOUND"
+    },
+    {
+      "key": "dsh:.agent-presets",
+      "repo": "dsh-core",
+      "repoPath": "dsh/.agent-presets",
+      "anchor": "dsh",
+      "rel": ".agent-presets",
+      "type": "dir",
+      "enabled": false,
+      "note": "H1b 启用：persona 属 P5 A 层保护区 + 磁盘层审计对象，分发会被 butler-watch-fs 判未审计改动（需先做 §5.5 三层豁免）"
+    },
+    {
+      "key": "dsh:skills",
+      "repo": "dsh-core",
+      "repoPath": "dsh/skills",
+      "anchor": "dsh",
+      "rel": "skills",
+      "type": "dir",
+      "enabled": false,
+      "note": "H1b 启用：理由同上（A 层 P5 保护区）"
+    },
+    {
+      "key": "ws:docs",
+      "repo": "dsh-workspace",
+      "repoPath": "docs",
+      "anchor": "ws",
+      "rel": "docs",
+      "type": "dir",
+      "enabled": false,
+      "note": "H1b 启用：docs 属 P5 B 层写后审计对象，批量分发会产生大量审计条目"
+    },
+    {
+      "key": "ws:root-launchers",
+      "repo": "dsh-workspace",
+      "repoPath": ".",
+      "anchor": "ws",
+      "rel": ".",
+      "type": "dir",
+      "enabled": false,
+      "note": "H3（2026-09-16）：本条**已拆成文件级条目**（见下方 ws:dsh-*.ps1/cmd 六条）——整目录递归会把数据区根下所有 *.ps1/*.cmd/*.mjs/*.ico 一次性分发，触发 P5 A 层保护区批量审计，且会顺带覆盖与启动无关的工具。本条目保留不启用，仅作历史说明与回归对照。"
+    },
+    {
+      "key": "ws:dsh-start.ps1",
+      "repo": "dsh-workspace",
+      "repoPath": "dsh-start.ps1",
+      "anchor": "ws",
+      "rel": "dsh-start.ps1",
+      "type": "file",
+      "enabled": true,
+      "note": "开机启动链（含中文：PS5.1 需 UTF-8 BOM → 分发侧有 BOM 门，源缺 BOM 一律拒绝覆盖）"
+    },
+    {
+      "key": "ws:dsh-start.cmd",
+      "repo": "dsh-workspace",
+      "repoPath": "dsh-start.cmd",
+      "anchor": "ws",
+      "rel": "dsh-start.cmd",
+      "type": "file",
+      "enabled": true,
+      "note": "开机入口（桌面快捷方式指向它）；.cmd 必须纯 ASCII、**不要** BOM"
+    },
+    {
+      "key": "ws:dsh-shutdown.ps1",
+      "repo": "dsh-workspace",
+      "repoPath": "dsh-shutdown.ps1",
+      "anchor": "ws",
+      "rel": "dsh-shutdown.ps1",
+      "type": "file",
+      "enabled": true,
+      "note": "「退下吧」停机链（含中文，需 BOM）；顺序铁律见 persona"
+    },
+    {
+      "key": "ws:dsh-shutdown.cmd",
+      "repo": "dsh-workspace",
+      "repoPath": "dsh-shutdown.cmd",
+      "anchor": "ws",
+      "rel": "dsh-shutdown.cmd",
+      "type": "file",
+      "enabled": true,
+      "note": "停机入口（桌面 DSH关机.lnk 指向它）"
+    },
+    {
+      "key": "ws:dsh-restart.ps1",
+      "repo": "dsh-workspace",
+      "repoPath": "dsh-restart.ps1",
+      "anchor": "ws",
+      "rel": "dsh-restart.ps1",
+      "type": "file",
+      "enabled": true,
+      "note": "GUI 卡死急救 / 让新配置生效（含中文，需 BOM）；改守护鱼自身代码时才先 guard-ctl stop"
+    },
+    {
+      "key": "ws:dsh-restart.cmd",
+      "repo": "dsh-workspace",
+      "repoPath": "dsh-restart.cmd",
+      "anchor": "ws",
+      "rel": "dsh-restart.cmd",
+      "type": "file",
+      "enabled": true,
+      "note": "重启入口（桌面 DSH 重启.lnk 指向它）"
+    }
+  ]
+}

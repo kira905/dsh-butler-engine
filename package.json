@@ -1,7 +1,7 @@
 {
   "name": "@kira905/dsh-butler-engine",
-  "version": "0.2.2",
-  "description": "Resident tick scheduler with single-instance job locks, an autonomy switch matrix and a hash-chained audit log — plus a report/patrol toolkit (stagnation nudge, failure classification, progress status) and a pluggable notifier. Zero runtime dependencies.",
+  "version": "0.3.0",
+  "description": "Resident tick scheduler with single-instance job locks, an autonomy switch matrix and a hash-chained audit log — plus a report/patrol toolkit, a hand-off / cross-host sync toolkit (depart / arrive / cold-merge / text sync) and a pluggable notifier. Zero runtime dependencies.",
   "type": "module",
   "main": "./src/index.mjs",
   "exports": {
@@ -13,7 +13,14 @@
     "./notify": "./src/dsh-butler/lib/notify.mjs",
     "./steward": "./src/dsh-butler/steward.mjs",
     "./stall-nudge": "./src/dsh-butler/stall-nudge.mjs",
-    "./failure-classify": "./src/dsh-butler/failure-classify.mjs"
+    "./failure-classify": "./src/dsh-butler/failure-classify.mjs",
+    "./host-config": "./src/lib/host-config.mjs",
+    "./repo-superset": "./src/lib/repo-superset.mjs",
+    "./peer-channel": "./src/lib/peer-channel.mjs",
+    "./handoff": "./src/dsh-butler/handoff.mjs",
+    "./cold-handoff": "./src/dsh-butler/cold-handoff.mjs",
+    "./text-sync": "./src/dsh-butler/text-sync.mjs",
+    "./text-sync-direct": "./src/dsh-butler/text-sync-direct.mjs"
   },
   "bin": {
     "butler-tickd": "./bin/butler-tickd.mjs",
@@ -22,7 +29,11 @@
     "butler-steward-advice": "./src/dsh-butler/steward-advice.mjs",
     "butler-failure-classify": "./src/dsh-butler/failure-classify.mjs",
     "butler-progress-status": "./src/dsh-butler/progress-status.mjs",
-    "butler-stall-nudge": "./src/dsh-butler/stall-nudge.mjs"
+    "butler-stall-nudge": "./src/dsh-butler/stall-nudge.mjs",
+    "butler-handoff": "./src/dsh-butler/handoff.mjs",
+    "butler-cold-handoff": "./src/dsh-butler/cold-handoff.mjs",
+    "butler-text-sync": "./src/dsh-butler/text-sync.mjs",
+    "butler-text-sync-direct": "./src/dsh-butler/text-sync-direct.mjs"
   },
   "files": [
     "src",
@@ -46,7 +57,10 @@
     "resident",
     "autonomy",
     "lock",
-    "audit"
+    "audit",
+    "handoff",
+    "cross-host",
+    "sync"
   ],
   "engines": {
     "node": ">=20"

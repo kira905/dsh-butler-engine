@@ -686,7 +686,7 @@ export async function deliverPush(items, opts = {}) {
  * 【host 分文件（2026-09-11）】P2 每 5 分钟 tick，两台机同名 `watch-<date>.md` 必然分叉
  *   （本文件是 append 式，两边各追加自己的节）→ 每次 depart 都会被推前超集门挡。
  *   根治：`watch-<date>-<host>.md`（照 butler-barewatch 先例）；旧名文件不再写、不再删
- *   （ROG 侧升级前仍写旧名）。详情 docs/。
+ *   （本机升级前仍写旧名）。详情 docs/。
  */
 export function reportPath(now = Date.now(), docsRoot = process.env.BUTLER_REPORT_DIR || path.join(os.homedir(), 'dsh', 'docs', 'reports')) {
   const d = new Date(now);

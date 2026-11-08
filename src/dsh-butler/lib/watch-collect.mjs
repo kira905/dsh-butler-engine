@@ -1032,7 +1032,7 @@ export function detectToolLoop(events, opts = {}) {
 
 // ── reasoning 原地绕圈检测（2026-09-10 新增）────────────────────────────
 //
-// 背景：2026-09-09 23:56 会话 <session-id>（TUF会话同步后丢失问题）在 reasoning
+// 背景：2026-09-09 23:56 会话 <session-id>（会话同步后丢失问题）在 reasoning
 //   阶段原地绕圈：单 step 14.4 万字符、120 字符块重复率 0.899，而既有四条判据全部不命中
 //   —— ①回合未闭合 + 10min 无新事件（绕圈时 reasoning chunk 一直在写，idle 只有秒级）
 //      ②同工具同签名 ≥5 次（绕圈不产生 tool/call）③超长会话（step 数并不多）

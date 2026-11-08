@@ -30,15 +30,26 @@ const ok = (name, cond, detail = '') => {
 const run = (args) => spawnSync(process.execPath, [BIN, ...args], { env, encoding: 'utf8', timeout: 60_000 });
 
 // ① 每个模块都能被 import（= 没有语法错、没有断掉的相对导入）
+//    ⚠️ `_direct/` 例外：那一组是**随主件 scp 到对端执行**的独立 CLI（`node <script> <job.json>`），
+//    运行时入口就是顶层语句、不是被 import 的模块；对它们的保证改成 ①b 的语法检查。
 const files = [];
 const walk = (d) => { for (const n of fs.readdirSync(d)) { const p = path.join(d, n); if (fs.statSync(p).isDirectory()) walk(p); else if (n.endsWith('.mjs')) files.push(p); } };
 walk(path.join(PKG, 'src'));
+const importable = files.filter((f) => !/[/\\]_direct[/\\]/.test(f));
 let imported = 0;
 const broken = [];
-for (const f of files) {
+for (const f of importable) {
   try { await import(new URL(`file://${f.replace(/\\/g, '/')}`).href); imported++; } catch (e) { broken.push(`${path.relative(PKG, f)}: ${e.message}`); }
 }
-ok('每个 .mjs 都能 import', broken.length === 0, `(${imported}/${files.length}) ${broken.join(' | ')}`);
+ok('每个 .mjs 都能 import', broken.length === 0, `(${imported}/${importable.length}) ${broken.join(' | ')}`);
+
+// ①b `_direct/` 远程脚本：只保证语法可解析（用 --check 起子进程，不 import）
+const directBad = [];
+for (const f of files.filter((x) => /[/\\]_direct[/\\]/.test(x))) {
+  const r = spawnSync(process.execPath, ['--check', f], { encoding: 'utf8' });
+  if (r.status !== 0) directBad.push(`${path.relative(PKG, f)}: ${(r.stderr ?? '').slice(0, 120)}`);
+}
+ok('_direct/ 远程脚本语法可解析', directBad.length === 0, directBad.join(' | '));
 
 // ② 公共入口的导出面
 const api = await import(new URL('file://' + path.join(PKG, 'src', 'index.mjs').replace(/\\/g, '/')));

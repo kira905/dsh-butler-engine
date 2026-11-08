@@ -102,12 +102,45 @@ butler-tickd --list
 butler-tickd --status
 ```
 
+## 0.3.0 新增：交接 / 跨机同步（四个工具）
+
+同一个内核算出来的另一面：**机器之间怎么交接**。四个入口都默认 dry-run，先把计划打出来看清楚再 `--apply`。
+
+| 命令 | 一句话 | 典型用法 |
+|---|---|---|
+| `butler-handoff` | 手动交接器：`--status` 体检 / `--depart` 交出本机状态 / `--arrive` 接对端状态 | `butler-handoff --status` · `butler-handoff --depart --dry-run` |
+| `butler-cold-handoff` | 冷接机：DSH 已停 + 写者已冻结的窗口里做跨机语义合并（坑库 / 记忆库） | `butler-cold-handoff --status` · `--dry-run` · `--apply` |
+| `butler-text-sync` | 跨机文本同步（文档 / 预设；经工作副本，带推前超集体检） | `butler-text-sync --status` · `--apply` |
+| `butler-text-sync-direct` | 不经仓的直连同步（ssh 传包；永不删除任何文件） | `butler-text-sync-direct --status` · `--status -json` |
+
+三条与"跨机"有关的硬规矩，写死在里面：
+
+1. **Arrive 分发前过对偶门**：目标文件当前 hash ≠ 上一次交接基线 ⇒ 跳过 + 告警，不静默覆盖。
+2. **永不删除对端文件**：文本同步只有"新增 / 更新 / 落冲突副本"三种结果，没有 purge、没有镜像。
+3. **交接单不写绝对路径**：记录里只有主机名 / 仓内相对路径 / key / 哈希 / 条数，写盘前硬校验。
+
+### 环境变量（跨机这一面认这些）
+
+| 变量 | 含义 | 不设时的兜底 |
+|---|---|---|
+| `BUTLER_DSH_ROOT` | 本机数据区根（含 `docs/` `tools/` `_archive/`） | `$DSH_WORKSPACE` 或 `~/DSH` |
+| `BUTLER_REPO_ROOT` | 三仓工作副本根（盘外目录） | `~/dsh-repos` |
+| `BUTLER_PEER` | 默认对端 ssh 别名 | **空** —— 用 `--peer` 显式传 |
+| `BUTLER_PEER_HOME` | 对端用户目录根 | 空 |
+| `BUTLER_PEER_DSH_ROOT` | 对端数据区根 | 空 |
+| `BUTLER_PEERS` | 对端清单（逗号分隔，`text-sync` 的探测用） | 空 = 不探测 |
+| `BUTLER_MACHINE_ALIASES` | 机器别名表（JSON：`{ "规范名": ["别名…"] }`） | **只有本机一台** |
+| `BUTLER_SELF_BASE` | 本机服务基址 | `http://127.0.0.1:3080` |
+| `BUTLER_DESKTOP_SUBDIR` | 桌面恢复入口子目录名 | `DSH-restore` |
+
+> ⚠️ 这些兜底值只是"能跑起来"，不代表推荐布局。**换机器请显式设变量**。
+
 ## 状态与配置放在哪
 
 | 东西 | 默认位置 | 覆盖方式 |
 |---|---|---|
 | 心跳 / 单实例锁 / 调度日志 | `%TEMP%\dsh-butler-tickd\`（`state.json` / `lock` / `dsh-butler-tickd.log`） | 环境变量 `DSH_TICKD_DIR` |
-| 配置与审计（放行开关、审计流水、告警日志） | `~/.dsh\`（Windows：`C:\Users\<你>\.dsh`） | 环境变量 `BUTLER_DSH_HOME` 或 `DSH_HOME` |
+| 配置与审计（放行开关、审计流水、告警日志） | `~/.dsh`（Windows：`%USERPROFILE%\.dsh`） | 环境变量 `BUTLER_DSH_HOME` 或 `DSH_HOME` |
 | 作业脚本树根（作业表里 `path.join(DSH, …)` 那部分） | `~/dsh`（Windows 上落在用户目录下的 `dsh` 子目录） | 环境变量 `BUTLER_ROOT` |
 
 ## 已知限制（第一版就说清楚）
@@ -123,13 +156,15 @@ butler-tickd --status
 ## 目录结构
 
 ```
-src/dsh-butler/         调度内核 + 日报/巡检工具（butler-tickd.mjs 是调度入口，
-                        steward*.mjs / failure-classify / progress-status / stall-nudge 是工具入口）
-src/dsh-butler/lib/     同层模块：锁、审计、开关、状态读写…… 以及 lib/notify.mjs（通知注入点）
-src/lib/                与上层工具共用的几件：生产树守卫、DSH home/工作区解析、文档族判据
+src/dsh-butler/         调度内核 + 日报/巡检工具 + 交接/跨机工具（butler-tickd.mjs 是调度入口，
+                        handoff / cold-handoff / text-sync / text-sync-direct 是跨机入口）
+src/dsh-butler/lib/     同层模块：锁、审计、开关、状态读写、交接核心与合并…… 以及 lib/notify.mjs（通知注入点）
+src/dsh-butler/_direct/ 直连同步的远程脚本（select / pack / place / unplace，随主件 scp 到对端执行）
+src/lib/                与上层工具共用的几件：生产树守卫、DSH home/工作区解析、宿主环境口径（host-config）、
+                        三仓超集体检（repo-superset）、对端通道（peer-channel）
 bin/butler-tickd.mjs    npm bin 包装层
 docs/架构一页.md         各模块职责一页看完
-test/smoke.mjs          内核自检：18 条（全用临时目录，不碰真实状态）
+test/smoke.mjs          内核自检：19 条（全用临时目录，不碰真实状态）
 test/notify-seam.mjs    通知注入点自检：19 条（默认 no-op / 注入 / 去重 / 开关 / 六个入口）
 ```
 

@@ -194,7 +194,7 @@ export const JOBS = [
   //   ⚠️ **本卡不发真消息**：脚本 `family-remind-tick.mjs` 的 selectChannel 缺省 = () => null ⇒
   //     到点一律记 `undeliverable/no-transport`；真通道（外部通道/外部通道）属 ⑨ 卡，要操作者在场再接。
   //   🔴 订正注（2026-10-29 · N2 卡 · 只标注不改原文）：上面这条**已过期**。一期提醒链（N2）落地后：
-  //     ① `selectChannel` 缺省按 `'wechat'`，不再是 `() => null`；
+  //     ① `selectChannel` 缺省走宿主配置的通道，不再是 `() => null`；
   //     ② **真发与否只由 `opts.send` 决定**：`opts.send` 缺省 ⇒ `undeliverable/no-transport`，CLI 只在
   //        `--fake-transport`（夹具专用）时注入假实现 ⇒ **本 job 行的 args 里永远不带 `--fake-transport`**；
   //     ③ 真发送末端 = 由宿主自行注入的外部通道（本包不提供任何具体通道实现），接线属 **N3**（要操作者在场）；
@@ -831,7 +831,7 @@ export const JOBS = [
     script: 'mem-sync-tick.mjs', args: ['--role', 'auto', '--apply', '--keep', '96'], dir: HERE,
     benignExitCodes: [3], benignExitLabel: '对端不可达 / 角色未声明 / inbox 无快照 ⇒ 安全跳过（家网恢复自动收敛）' },
   // ── 2026-10-30（卡「记忆两岸互通 S2」· 方案 `docs/` §9）──────────
-  //   语义 = 每 30 分钟把**岸**（<host> 上的生活实例，独立 `DSH_HOME=<life-home>\.dsh`）**新增**的记忆
+  //   语义 = 每 30 分钟把**生活实例**（<host> 上的另一份 home，独立 `DSH_HOME=<life-home>\.dsh`）**新增**的记忆
   //     增量导入本机（本机）记忆库。S1 已完成一次性全量导入（154 条 → id `1500000..1500153` · 标签成对
   //     `src:life,srcid:<源id>` · 判据器 `memory-bridge-probe.mjs` rc=0）；本 job 是它的**续章** ——
   //     她那边的日常写入不会自己长腿跑进来，必须有这一轮轮询。
@@ -866,7 +866,7 @@ export const JOBS = [
   //     `notify-docsync` 距 130 s（> 120 s 纪律）、与末位差 130 s（≥ 40 s）。
   //   ⚠️ **必须先 `--stop` + 等守护鱼 `--ensure` 才生效**（JOBS 是模块级 const；`--status`/`--list`
   //     只是新进程读当前代码）。回滚 = `docs/ [--apply]`。
-  { id: 'memory-sync-life', label: '岸记忆增量导入（<host> 生活实例 · 每 30 分钟 · 默认关）',
+  { id: 'memory-sync-life', label: '生活实例记忆增量导入（<host> · 每 30 分钟 · 默认关）',
     intervalMs: 30 * MIN, initialMs: 1_180_000,
     script: path.join(DSH, 'tools', 'memory-import-life.mjs'),
     args: ['--apply', '--json'],

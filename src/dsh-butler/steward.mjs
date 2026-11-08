@@ -1300,7 +1300,7 @@ export function mergeState(prev, report, { now = Date.now(), topN = 3 } = {}) {
       + '已答的也留着，好回答"什么时候问过、什么时候答的"）· instructions[] / raiseCounts[] / reports[] 心跳类只留 30 天',
     sync: false,
     syncWhy: '本文件带"每轮去重（同 id 二次 no-op）+ 上桌次数 + 心跳"时间窗口语义，按 lib/state-files.mjs 判据**禁止跨机同步**'
-      + '（双机共享会互相压制上桌计数）；第一版单机 ROG（方案 §1.4）',
+      + '（双机共享会互相压制上桌计数）；第一版单机部署（方案 §1.4）',
     loss: '上桌计数与心跳归零（待拍板项"上桌过几次"回到 0，需重新累计）；decisions[] 丢失 = 拍板理由不可考，只能从档/会话里翻',
     heartbeat: { lastRunAt: at, lastRunHost: hostName(), runs, lastResult: 'ok', version: STEWARD_VERSION },
     lastReport: snapshot,
@@ -2145,7 +2145,7 @@ export async function selftest() {
   });
 
   run('夹具14 · C7 · 标题无三态但 ②③ 过 ⇒ 仍投（§4.5.1 边界样本）', () => {
-    const plan = planBroadcast({ items: [{ ...LIVE, title: '岸维护与黑箱排查', updatedAt: NOW - 3600e3, ageDays: 0.04 }], bindings: null, now: NOW, selfSid: '' });
+    const plan = planBroadcast({ items: [{ ...LIVE, title: '生活实例维护与排查', updatedAt: NOW - 3600e3, ageDays: 0.04 }], bindings: null, now: NOW, selfSid: '' });
     assert(plan.sendCount === 1, `应照投，实际 sendCount=${plan.sendCount}（理由 ${JSON.stringify(plan.blocked[0]?.reasons)}）`);
     assert(plan.send[0].titleSoft === false, '无三态时 titleSoft 必须为 false（快筛只是快筛）');
     assert(plan.send[0].ownerVia.some((v) => v.startsWith('title:')), '归属应来自标题项目名');

@@ -30,3 +30,13 @@ export {
 
 export { alert } from './dsh-butler/lib/alert.mjs';
 export { appendAudit } from './dsh-butler/lib/audit.mjs';
+
+// ── 0.3.0 交接 / 跨机面（可复用部分）────────────────────────────────────────────
+export {
+  dshRoot, repoRoot, peerAlias, peerHome, peerDshRoot, selfBase, selfHost,
+  machineAliases, machineAliasesConfigured, envStr,
+} from './lib/host-config.mjs';
+export { checkRepo, conclusion, hasBlockingRisk, isLocalBacklog, REPOS, REPO_ROOT, WORKSPACE_ROOT } from './lib/repo-superset.mjs';
+export { canonicalMachine, machineTagOf, deviceLineOf, machineFromDevice, classifyOwnership, MACHINE_ALIASES } from './dsh-butler/lib/merge-memory.mjs';
+export { currentHost, ANCHORS, SKIP_DIR_RE, SKIP_FILE_RE } from './dsh-butler/lib/handoff-core.mjs';
+export { hostTagOf, messageFromHost, parseLogLines } from './dsh-butler/lib/push-guard.mjs';

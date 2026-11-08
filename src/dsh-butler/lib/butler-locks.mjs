@@ -941,7 +941,7 @@ export const LOCK_REGISTRY = [
   //        **按 `remindKey` 原子 upsert**（tmp + rename，方案 §0c #17），**不再是 append**；
   //        另新增 `attempts.json`（有界重试 3 轮 ⇒ gave-up）与 `digest.json`（静音窗汇总桶）；
   //        `activation.json` 由 `--activate` 写、job 内**只读**（缺 ⇒ fail-closed `rc=4`）。
-  //     ② N2 起 `selectChannel` 缺省按 `'wechat'`（不再是 `() => null`）；**真发与否只由 `opts.send` 决定**，
+  //     ② N2 起 `selectChannel` 缺省走宿主配置的通道（不再是 `() => null`）；**真发与否只由 `opts.send` 决定**，
   //        缺省 ⇒ `undeliverable/no-transport`。真发送末端 = 由宿主自行注入的外部通道（本包不提供实现），
   //        接线属 **N3**（要操作者在场 + 开闸窗口）。
   //     ③ 锁纪律的现行口径 = 方案 §0c **#18**（提醒链自身不持锁 / 由 `lockRunner` 单实例串行）
@@ -1021,7 +1021,7 @@ export const LOCK_REGISTRY = [
       '**不 import `runOnce`**：不做 pull、不合并、不碰向量库'],
     skipPolicy: 'skip', source: 'tickd' },
   // ── 2026-10-30（卡「记忆两岸互通 S2」）：`memory-sync-life` ─────────────────────────────
-  //   语义 = 每 30 分钟把「岸」（<host> 生活实例 · 独立 `DSH_HOME=<life-home>\.dsh`）新增的记忆
+  //   语义 = 每 30 分钟把「生活实例」（<host> 上的另一份 home · 独立 `DSH_HOME=<life-home>\.dsh`）新增的记忆
   //     增量导入本机库（`memory-import-life.mjs`，幂等：内容 sha256 + `srcid:` 双键）。
   //   ⚠️ 判据 = 脚本自身**没有** `acquireTickLock`（`memory-import-life.mjs` 全文零命中、也不 import
   //     本模块）⇒ 锁由 tickd 侧 `acquireJobLock` 兜底；登记只为防「手工直跑 + tickd 到点」
