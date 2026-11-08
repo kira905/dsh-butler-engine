@@ -1,5 +1,22 @@
 # 变更记录
 
+## 0.5.2 · 2026-11-09
+
+**回修：把通道痕迹从公开包里清掉（撤回 0.5.0 顺手带进来的一件，中性化另一件）。**
+
+- 🔴 **撤回 `src/dsh-butler/lib/secretary-health.mjs`**：它是某个具体外部 IM 通道的健康判定件，带产品名、
+  主机内路径与该通道的私有状态文件名 —— 本包的红线是**通道不开源**（0.5.0「补库模块」时按"缺件"顺带搬了，
+  漏数的是数量、不是这条否决）。撤掉后**不给替身实现**：面板那一侧解析不到就显式降级
+  （`dsh-butler-panel` 的 `collectServiceShard` 返回 `{ok:false, reason}`，页面显示占位而**不是报错**）。
+- **`state-files.mjs` 通道词中性化**：登记名与注释里的具体通道字样改成中性占位
+  （`channel-hub/*` · `channel-bot-state.json` · `channel-notify-token.json` · 「外部通道」…），
+  **宽词表纯子串归零**（两类：具体 IM 通道的产品名，与两个内部件名；词表本身不在这里复述 —— 复述即命中）。
+  登记表的字段形状与语义一处未动：仍是一张「状态文件登记表」，名字仍是可解析的相对路径。
+- **私有树档名去掉**：注释里指向内部方案 / 交付报告的 `docs\…` 路径，改成「出处不在本包内」这类中性说法
+  （不影响任何字段与判定）。
+- 判据（现跑）：`npm pack` 后**解开**再 grep —— 宽词表 **0** 命中 · `docs\(方案|交付报告|口径|交接|审核)-` **0** 命中；
+  `node --check` 全仓 0 失败；`npm test` 全过；已发布 tarball 重下解包复验同一口径。
+
 ## 0.5.1 · 2026-11-09
 
 **只订正 `examples/first-run.json`：把 `barewatch` 从首开组撤出。挂了才发现的。**
@@ -22,6 +39,8 @@
   `src/dsh-butler/` 下 `butler-doc-discipline-cli.mjs`。
   选这两个目录的原因：engine 的 `src/` 就是生产 `tools/` 的镜像（`src/dsh-butler/lib` ↔ `tools/dsh-butler/lib`），
   相对 import 的形状才能原样保持。
+  > ⚠️ **2026-11-09 订正**：上面这 8 件里 `secretary-health.mjs` 已在 **0.5.2 撤回** —— 它是具体外部通道的
+  > 健康判定件（产品名 + 内网路径 + 该通道私有状态文件名），撞「通道不开源」红线。其余 7 件保留。
 - 4 处跨区 import 改指 `../../../jobs/lib/…`（`audit-guard` ×3 · `manual-actions` ×1）—— 那几件在 engine 里
   只存在于 `jobs/lib/`，engine 既有约定就是跨区写相对路径（`jobs/lib/*` 亦反向指 `src/dsh-butler/lib`）。
 - 脱敏：机器名 / 主机账号 / 盘符绝对路径一律中性化（路径改 `<workspace>` 占位，代码默认值改成运行时可推导）。

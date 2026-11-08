@@ -91,14 +91,14 @@ export const STATE_FILES = [
     retention: '永久（沉底不删）+ 单文件 <10 MB', sync: true, syncWhy: '跨机共享语义（坑库）',
     loss: '重新积累（历史 seed 可重跑）',
     // ── 【2026-11-05 · A 案 Q3「坑库写侧合一」】本文件**降为纯缓存/派生**，真源搬到 md ──
-    // 背景：同一类事实以前在两处**各写各的**（本文件 = P4 自动聚类态 0.61 MB；`docs\坑库\*.md` = 18 件 0.9 MB，
+    // 背景：同一类事实以前在两处**各写各的**（本文件 = P4 自动聚类态 0.61 MB；坑库 md 树 = 18 件 0.9 MB，
     //   其中还有**人写的手工条目区**本文件里根本没有）⇒ 违反 R1「每类事实只有一个真源」。
-    // 主人 2026-11-05 10:31「按建议落」拍板：**合读到 `docs\坑库`（人读的真源）**，本文件降为缓存并登记。
+    // 主人 2026-11-05 10:31「按建议落」拍板：**合读到坑库 md（人读的真源）**，本文件降为缓存并登记。
     // 口径实现 = `lib\pitfall-source.mjs`（读侧统一口）；写者**不变**（pitfall-tick / pitfall-cluster-tick 照旧写本文件，
     //   只是它不再是权威 —— 删本文件不丢「坑」，只丢聚类态）。
     authority: 'cache',
-    canonical: 'docs\\坑库\\*.md（人读/人写的真源；机器只读，绝不自动改写）',
-    derivedFrom: '本机 / 对端会话扫描（P4 tick 聚类）+ docs\\坑库 手工条目区',
+    canonical: '坑库 md（人读/人写的真源；机器只读，绝不自动改写；路径随宿主工作区而定）',
+    derivedFrom: '本机 / 对端会话扫描（P4 tick 聚类）+ 坑库 md 的手工条目区',
     rebuildCmd: 'node <workspace>\\tools\\dsh-butler\\pitfall-tick.mjs --force',
     rebuildNote: '重建会**丢**：① count / firstSeen / lastSeen 的精确值（要从会话重扫才回来，重扫只覆盖还留在 sessions\\ 与 '
       + '_archived-sessions\\ 里的会话）② tools 计数 ③ sessions 列表 ④ stage / likelyFixed 判定位 ⑤ 跨机合并进度（devices 并集）'
@@ -386,7 +386,7 @@ export const STATE_FILES = [
   {
     // 【2026-10-28 · 卡「V3功能面 · 同步可观测性」（B1）】文本**直连**同步（不经仓）的自有账本。
     //   写方 = `tools\dsh-butler\text-sync-direct.mjs` 的 `finalizeRun()` → `recordRound()`（唯一记账入口）。
-    //   真源口径：`docs\方案-文档直连同步可观测性-20261028.md` §3.1（8 条写死）/ §3.5（本登记）。
+    //   口径 = 8 条写死 + 本段登记（出处不在本包内）。
     //   ⚠️ dual 期**两个名字**：primary `ops-text-sync-direct.json` + mirror `butler-text-sync-direct.json`
     //      （`writeTargets()` 算出，本表登记旧名 = 逻辑名，`registry-audit` 的别名归并认得出两个拼写）。
     //   ⚠️ 权威源不是本文件：一轮同步的原始件是 `_archive\text-sync-direct\<runId>\manifest.json`
@@ -625,12 +625,12 @@ export const STATE_FILES = [
   //   ⚠️ 三条台账的**实体均尚未落盘**（撤回链 S-5 / 台账件 S-9 在 ⑤ 包其它卡）⇒ 本批 = 前置登记
   //      （与 `butler-monitor-registry.json` / `butler-quota-ledger.jsonl` 同款先例：登记 = 声明期望）。
   {
-    name: 'butler-secretary.json', schemaVersion: 1, persistence: 'persistent',
+    name: 'butler-service.json', schemaVersion: 1, persistence: 'persistent',
     retention: '覆盖式（服务面自有闸：总闸/单通道/预算/静默时段/对账历史；对账结论只留最近 14 天）',
     sync: false,
     syncWhy: '单机开关 + 单机对账历史（总纲 §4「服务面自有闸」D5：独立闸 · 吃 L0 · **不落生态四键**）——'
       + '跨机共享会让对端开关状态与本机台账对不上（"闸说开、台账零行"= 判据自相矛盾，同 §3.9「单机事实」款）',
-    loss: '推送总闸回缺省（**缺省 = 默认关**，方案 §1.7 第 4 项）⇒ 服务面推送停摆（`secretary-notify on` 可重建）；'
+    loss: '推送总闸回缺省（**缺省 = 默认关**，方案 §1.7 第 4 项）⇒ 服务面推送停摆（重开推送总闸可重建）；'
       + '对账历史丢失 ⇒ 连续不齐天数从 0 重新累计（判定不丢，只是回数断档）',
   },
   {
@@ -679,7 +679,7 @@ export const STATE_FILES = [
     sync: false,
     syncWhy: '投喂库含**投喂正文 + `owner_user` + `visibility`**，且「投喂随宿主」（方案 §4-PM3.1 2026-09-20 订正）'
       + '—— 落库机就是唯一权威；跨机共享会让"这条是谁的"在两端对不上（隐私包 §3.3 的过滤与撤回同时失效，判据 4）',
-    loss: '投喂内容与归属丢失（**不可重建**：源文件与企微消息都已过期）；对账失去条面 ⇒ 只能靠实体面报孤儿',
+    loss: '投喂内容与归属丢失（**不可重建**：源文件与外部通道消息都已过期）；对账失去条面 ⇒ 只能靠实体面报孤儿',
   },
   {
     name: 'secretary-feed-audit.jsonl', schemaVersion: 1, persistence: 'persistent',
@@ -841,8 +841,8 @@ export const STATE_FILES = [
     loss: '丢推送状态 ⇒ 下次 `gen-presets --push` 重推（幂等、无害），只是判不出「上次推到哪个 sha」',
   },
   {
-    // ⑦ 企微告警本地队列
-    name: 'wecom-alert-queue.jsonl', schemaVersion: null, persistence: 'append',
+    // ⑦ 外部通道告警本地队列
+    name: 'channel-alert-queue.jsonl', schemaVersion: null, persistence: 'append',
     retention: 'append-only（hub 不可达 / 渠道失败时把告警落本地队列，**绝不静默吞**；人工确认后才清）',
     sync: false,
     syncWhy: '告警是**本机发出**的动作（hub-unreachable / 渠道失败）；跨机同步会让两台互发同一批告警，重复打扰主人',
@@ -882,7 +882,7 @@ export const STATE_FILES = [
     loss: '家人记忆**不可重建**（同目录级条目）；`-journal` 丢失 = 未提交事务回滚（库停在上一检查点）',
   },
   // ── 2026-10-10 · 冲刺600 补坑库联动A（A 点：坑库第二向量来源）新增一条 ────────────────
-  //   判据源：`docs\记忆v2-坑库联动-方案-20260920.md` §A.4「新增登记：若引入标记文件
+  //   判据源：坑库联动方案的 §A.4（出处不在本包内）「新增登记：若引入标记文件
   //   `butler-pitfall-vector-dirty.json`，必须登记进 `lib\state-files.mjs`（否则 `sync-ignore --check` 会红）」
   //   + 同节 C5：该文件是全方案**唯一"有意双写者"**（置标记 = pitfall job；清标记 = 消费方）
   //     ⇒ 语义 = 时间窗口/一次性信号（跨机共享会让另一台按对端的待办判自己）⇒ `sync: false`。
@@ -932,7 +932,7 @@ export const STATE_FILES = [
       + '② 当日成本计数归零（最坏 = 当天可能多花一次额度上限内的调用）⇒ 代价可接受，故 `persistent` 而非 `permanent`',
   },
   // ── 2026-10-10 · 冲刺600 补坑库联动BCD（B 点：落地判据向量化）新增一条 ──────────────────
-  //   判据源：`docs\记忆v2-坑库联动-方案-20260920.md` §B.2 第 5 行 + §B.4「新状态文件
+  //   判据源：坑库联动方案的 §B.2 第 5 行（出处不在本包内） + §B.4「新状态文件
   //   `butler-p4-triage.json`（须登记 `state-files.mjs`）」+ §B.6 风险表（"判定文件被当权威" ⇒ 文件内写死 advisoryOnly）
   //   ⚠️ 与 D 点**同文件**（§D.1 落点：分 `advisory` / `llm` 两段）⇒ 只登记一次。
   {
@@ -991,7 +991,7 @@ export const STATE_FILES = [
       + '⇒ 到期告警无处可算、补审可能被静默漏掉',
   },
   // ── 2026-10-10 · 卡「冲刺600·补台账」（J 域 A-2「运行台账」）新增一条 ──────────────
-  //   判据源：`docs\交付报告-冲刺600-缺口台账-3-20261010.md` §2 第 31 行 + §7 第 ② 条
+  //   判据源：缺口台账 §2 第 31 行 + §7 第 ② 条（出处不在本包内）
   //   （缺口 = 文件不存在 / 无写入实现 / 未登记 state-files）。写口 = `lib/registry-audit-runs.mjs`
   //   （**单点**，判定源 `lib/registry-audit.mjs` 仍纯只读），调用点 = CLI 每次真跑（`--no-ledger` 可跳过）。
   //   ⚠️ `sync: false` ⇒ `gitignoreBlock()` 多一行 ⇒ 仓1 工作副本 `.gitignore` 与
@@ -1010,11 +1010,11 @@ export const STATE_FILES = [
 
   // ══════════════════════════════════════════════════════════════════════════════════
   // ── 2026-10-10 · 卡「冲刺600·补登记」（状态文件登记收口 · 21 条） ──────────────────────
-  //   出处：`docs\交付报告-冲刺600-缺口台账-1-20261010.md` §2 第 11 行（I·状态 §6.5
-  //        「登记 ↔ 磁盘双向闭合」判 🟡：磁盘有·登记无 22）；主档 §1 A 域同行。
+  //   出处 = 缺口台账（§2 第 11 行 / §1 A 域；名字与路径不在本包内）。
+  //        「登记 ↔ 磁盘双向闭合」判 🟡：磁盘有·登记无 22。
   //   本批口径（可复现）：磁盘侧 = `~/.dsh` **根层** `*.json` / `*.jsonl`（非递归，与第7棒转绿B /
   //        缺口台账1 同口径）；登记侧 = 本表 `name` 经 `expandHostPlaceholder(name, <host短码>)` 展开。
-  //   逐条定性（读/写点 + mtime）与不登白名单理由 → `docs\交付报告-冲刺600-补状态文件登记-20261010.md`。
+  //   逐条定性（读/写点 + mtime）与不登白名单理由：明细不在本包内。
   //   ⚠️ `sync:false` 的每一条都会让 `gitignoreBlock()` 多一行 ⇒ 仓1 工作副本 `.gitignore` 与
   //      `dsh-backup-sync.ps1` 的 `$ignore` 段须**同批重生成**（`node sync-ignore.mjs` /
   //      `node patch-backup-ignore.mjs`）；三处逐字一致由 `sync-ignore --check` 验。
@@ -1093,9 +1093,9 @@ export const STATE_FILES = [
     loss: '基线丢失 ⇒ 下次报告退化为全量（仍可重建，无数据损失）',
   },
   {
-    // 2026-10-30 · tickd job `wechat-sdk-watch`（微信官方 SDK 版本盯梢）的唯一写者。
-    // 判据 = 脚本 `tools\wechat-bridge\watch-official-sdk.mjs`（只写这一个文件 + 版本变化时一行告警）。
-    name: 'wechat-sdk-watch-state.json', schemaVersion: 1, persistence: 'persistent',
+    // 2026-10-30 · 宿主侧 tickd job（外部通道官方 SDK 版本盯梢）的唯一写者（本包不附该脚本）。
+    // 判据 = 宿主工具目录里的 `watch-official-sdk.mjs`（只写这一个文件 + 版本变化时一行告警）。
+    name: 'channel-sdk-watch-state.json', schemaVersion: 1, persistence: 'persistent',
     retention: '单份（每次检查覆盖：lastCheckedAt / lastSeenVersion / lastAlertedVersion / baseline）', sync: false,
     syncWhy: '已告警版本是**本机去重键**：跨机共享会让对端先把某版本喊过 ⇒ 本机再发新版时被静默压掉；'
       + '且基线常量写在脚本里（随代码走），状态只补"喊没喊过"',
@@ -1208,15 +1208,15 @@ export const STATE_FILES = [
     loss: '退化为无运行键（下次执行重建；不误发）',
   },
   {
-    name: 'wecom-aibot-state.json', schemaVersion: null, persistence: 'persistent',
+    name: 'channel-bot-state.json', schemaVersion: null, persistence: 'persistent',
     retention: '单份（本人 chatid / chattype / userid + **最近一条消息原文** + updatedAt）', sync: false,
     syncWhy: '**含家人消息明文**（隐私敏感，出机登记已单列 `tools\\lib\\egress-registry.mjs`）；且 chatid 是'
       + '本机观察到的单聊目标 —— 跨机共享等于把对端家人的消息搬到本机（服务面隐私包 §B2 判据）',
     loss: '退化为 **fail-closed 拒发**（找不到本人 chatid ⇒ 服务面推送不发，绝不误发给他人）',
   },
   // ── 【2026-10-10 · 卡「冲刺600·A域宪章层三件」】四件 10-10 新上物补登记 ────────────────
-  //   来由：`butler-registry-audit` 的 **S4「磁盘有必须登记」**当场报 4 条红（本卡只读复现值，
-  //   见 `docs\交付报告-冲刺600-A域宪章层三件-20261010.md`）——这些文件都是 10-10 当天新上的
+  //   来由：`butler-registry-audit` 的 **S4「磁盘有必须登记」**当场报 4 条红（复现值只读，出处不在本包内）
+  //   ——这些文件都是 10-10 当天新上的
   //   （分身僵留收官 / 卡死会话自愈链），上卡时漏了这一步。
   //   字段口径：配置型文件**没有** `schemaVersion` 字段（只有开关键）⇒ 按先例登记 `null`（"不适用"）；
   //   账本型用 `version`（不是 `schemaVersion`）同此处置 —— 不虚报一个文件里不存在的字段。
@@ -1260,8 +1260,8 @@ export const STATE_FILES = [
       + '以为"今天已经推过 / 这条刚提醒过"而不喊人（告警被静默）',
     loss: '当天可能重复提醒一次；搁置位丢失 ⇒ 被搁置条目重新出现（无数据损失）',
   },
-  // ── 2026-10-10 施工卡「翻译官·批1·hub 骨架」新增（wecom-hub · 3 条）─────────────────────────
-  //   判据源：`docs\方案-企微三机翻译官-手机遥控与家人档-20261010.md` §5.1（台账 / 本地出口 / 闸）
+  // ── 2026-10-10 施工卡「翻译官·批1·hub 骨架」新增（channel-hub · 3 条）─────────────────────────
+  //   判据源：台账 / 本地出口 / 闸三件（出处不在本包内）
   //   + ⑤包 §3.9 第 5 条登记义务；**卡验收判据 5 明写"新台账必须登记 state-files.mjs"**。
   //   三条一律 `sync:false`，判据 = 本表口径（**时间窗口 / 去重 / 锁 / 单机事实**一律禁同步）：
   //     入站消息流 + msgid 去重窗口 + 单实例锁 + 出口令牌 **全是"本机这一份长连接"的产物**，
@@ -1271,9 +1271,9 @@ export const STATE_FILES = [
   //      **推送由主人窗口执行**）。
   //   ⚠️ 实体**只落在 对端机**（批1 按互踢纪律不挂常驻自启；本机 侧只有代码副本、不跑）。
   {
-    name: 'wecom-hub/inbound.jsonl', schemaVersion: 1, persistence: 'persistent',
+    name: 'channel-hub/inbound.jsonl', schemaVersion: 1, persistence: 'persistent',
     onDemand: true,
-    onDemandWhy: '企微 hub 状态**只落在跑 hub 的那台机**（该段上方注释：实体只落 对端机，本机 侧只有代码副本、不跑）⇒ 本机不该有',
+    onDemandWhy: '外部通道 hub 状态**只落在跑 hub 的那台机**（该段上方注释：实体只落 对端机，本机 侧只有代码副本、不跑）⇒ 本机不该有',
     retention: 'append-only（每条入站一行，不自动清理）；🔴 **只摘要+长度，禁落消息正文**（X6 口径）',
     sync: false,
     syncWhy: '单机入站事实（含 msgid / from.userid / chattype / 路由与耗时）—— 入站流属"本机这一份长连接"：'
@@ -1281,23 +1281,23 @@ export const STATE_FILES = [
     loss: '答不出"这条消息到底收没收到"（批1 唯一的收货凭据）；去重窗口可从本台账重建、**本台账不可重建**',
   },
   {
-    name: 'wecom-hub/hub-state.json', schemaVersion: 1, persistence: 'persistent',
+    name: 'channel-hub/hub-state.json', schemaVersion: 1, persistence: 'persistent',
     onDemand: true,
-    onDemandWhy: '企微 hub 连接态 / 去重窗口：同上（hub 只跑 对端机）⇒ 本机不该有',
+    onDemandWhy: '外部通道 hub 连接态 / 去重窗口：同上（hub 只跑 对端机）⇒ 本机不该有',
     retention: '单份覆盖写（msgid 去重窗口 LRU 2000 + 连接态 + 收/去重计数）',
     sync: false,
     syncWhy: '**去重窗口 + 连接态** = 本表判据明列的禁同步项（去重 / 时间窗口）：双机共享会让两台互相压制'
       + '对方的 msgid 去重，并把对端的 `connected` 误读成本机连接态',
     loss: '重投保护窗口丢失 ⇒ 重启后若服务端重投旧消息会重复入库一行（可从台账看出，可容忍）；连接态是派生物',
   },
-  // ── 2026-10-10 施工卡「翻译官·批2·能回话」新增（wecom-hub · 2 条）─────────────────────────
-  //   判据源：方案 §D4（会话映射 `~/.dsh/wecom-hub/sessions.json`，**不进任何仓**）
+  // ── 2026-10-10 施工卡「翻译官·批2·能回话」新增（channel-hub · 2 条）─────────────────────────
+  //   判据源：方案 §D4（会话映射 `~/.dsh/channel-hub/sessions.json`，**不进任何仓**）
   //   + §12.5-I10（"登记随批做，不要拖到 K5"）+ ⑤包 §3.9 第 5 条；两条同样 `sync:false`，
   //   理由与批1 三条同款：都是**本机这一份长连接**的产物（映射表指向的 DSH 会话就在本机）。
   {
-    name: 'wecom-hub/sessions.json', schemaVersion: 1, persistence: 'persistent',
+    name: 'channel-hub/sessions.json', schemaVersion: 1, persistence: 'persistent',
     onDemand: true,
-    onDemandWhy: '企微 hub 会话映射：同上（映射指向**本机** DSH 会话，只有跑 hub 的那台机才有）',
+    onDemandWhy: '外部通道 hub 会话映射：同上（映射指向**本机** DSH 会话，只有跑 hub 的那台机才有）',
     retention: '单份覆盖写（原子写）：default 会话 + 每个 chat 的绑定 + pending（二次确认，批3 用）'
       + ' + pendingAsk（**agent 提问「待回答」标记**，卡【翻译官·交互】2026-10-11；🔴 **只落定位信息** {sessionId,host,callId,qCount,msgid,at}，**零正文**）'
       + '（R-015 2026-10-22 追加：pendingAsk 可选带 `labels` = **选项标签文案**〔仅「单问题 + 有选项」时落〕，'
@@ -1309,9 +1309,9 @@ export const STATE_FILES = [
       + 'pending 丢失 ⇒ 未消费的二次确认作废（安全方向，fail-safe）',
   },
   {
-    name: 'wecom-hub/hub-config.json', schemaVersion: 1, persistence: 'persistent',
+    name: 'channel-hub/hub-config.json', schemaVersion: 1, persistence: 'persistent',
     onDemand: true,
-    onDemandWhy: '企微 hub 主人白名单 / 派发参数：同上（身份表 = 跑 hub 那台机的单机权限事实）',
+    onDemandWhy: '外部通道 hub 主人白名单 / 派发参数：同上（身份表 = 跑 hub 那台机的单机权限事实）',
     retention: '单份覆盖写：**主人白名单**（ownerUserIds）+ 家人身份表（批4）+ 派发参数（cwd / 超时 / 选段）'
       + ' + 批1b 起 `holdConnectionHosts`（**持长连接白名单**，全局单连接者语义）',
     sync: false,
@@ -1319,31 +1319,31 @@ export const STATE_FILES = [
       + '且缺省空 = 谁都不是主人（fail-closed）—— 两份分叉会让人分不清"哪份才算"',
     loss: '丢失 ⇒ 回到"无主人"安全默认（危险动作全拒，**绝不降级执行**）+ 持连接白名单变空（= 不限制）；派发参数回缺省值（cwd=DSH 默认 / 超时 110s）',
   },
-  // ── 2026-10-10 施工卡「翻译官·批1b·hub 常驻化」新增（wecom-hub · 1 条）─────────────────
+  // ── 2026-10-10 施工卡「翻译官·批1b·hub 常驻化」新增（channel-hub · 1 条）─────────────────
   //   判据源：方案 §12.5-I5（跨机件搬运单 · 凭证**只写路径不写值**）+ 卡任务 6「出机面/台账登记随本卡就地做」。
   {
-    name: 'wecom-hub/aibot.json', schemaVersion: 1, persistence: 'persistent',
+    name: 'channel-hub/bot.json', schemaVersion: 1, persistence: 'persistent',
     onDemand: true,
-    onDemandWhy: '企微 hub 明文凭据：同上（且属凭据类 —— 只落跑 hub 的那台机）',
-    retention: '单份覆盖写：`{botId, secret}`（**明文密钥**）。批1b 起 hub 只读这里，**不再回落** `~/.dsh/wecom-aibot.json`',
+    onDemandWhy: '外部通道 hub 明文凭据：同上（且属凭据类 —— 只落跑 hub 的那台机）',
+    retention: '单份覆盖写：`{botId, secret}`（**明文密钥**）。批1b 起 hub 只读这里，**不再回落** `~/.dsh/channel-bot.json`',
     sync: false,
-    syncWhy: '**明文凭据**（与 `wecom-aibot.json` / `wecom-notify-token.json` 同款口径：凭证与凭证派生物一律单机、'
+    syncWhy: '**明文凭据**（与 `channel-bot.json` / `channel-notify-token.json` 同款口径：凭证与凭证派生物一律单机、'
       + '不进任何仓、不打印值）；且它正是"哪台机能建长连接"的开关 —— 跨机共享 = 两台都能建连 ⇒ **互踢 + 消息静默丢失**',
     loss: '丢失 = hub 起不来（`exit 2` 凭证缺失，fail-closed 不静默降级）；恢复 = 从共享位置重新复制一份（同机同用户）',
   },
   {
-    name: 'wecom-hub/autostart-task.xml', schemaVersion: null, persistence: 'persistent',
+    name: 'channel-hub/autostart-task.xml', schemaVersion: null, persistence: 'persistent',
     onDemand: true,
-    onDemandWhy: '企微 hub 开机自启任务定义（绑**那台机**的计划任务/账号/路径）：同上',
+    onDemandWhy: '外部通道 hub 开机自启任务定义（绑**那台机**的计划任务/账号/路径）：同上',
     retention: '单份覆盖写：开机自启任务定义（UTF-16LE+BOM），每次 `hub-ctl autostart install --apply` 重写',
     sync: false,
     syncWhy: '它绑的是**这台机**的计划任务/账号/路径（`S4U` + 本机用户 + 本机 `--home`）—— 跨机共享无意义且会误装任务的形态',
     loss: '丢失 = 无碍（下次 install 重新生成；任务本体已注册在系统里，不依赖这份留档）',
   },
   {
-    name: 'wecom-hub/confirm.json', schemaVersion: 1, persistence: 'persistent',
+    name: 'channel-hub/confirm.json', schemaVersion: 1, persistence: 'persistent',
     onDemand: true,
-    onDemandWhy: '企微 hub 二次确认链的**运行态**（失败计数 / 静默窗口）：只有真发生过确认尝试才会建这份文件 ⇒ 稳态下不存在属正常',
+    onDemandWhy: '外部通道 hub 二次确认链的**运行态**（失败计数 / 静默窗口）：只有真发生过确认尝试才会建这份文件 ⇒ 稳态下不存在属正常',
     retention: '单份覆盖写：`fails`（每个 chatid:userid 的错误确认计数，满 3 清零）+ `silence`（静默窗口 until/reason）',
     sync: false,
     syncWhy: '**时间窗口 + 防暴力猜的计数**（跨机共享会互相压制：一台机的"错 3 次"不该把另一台也静默）；'
@@ -1351,10 +1351,10 @@ export const STATE_FILES = [
     loss: '丢失 ⇒ 静默窗口与失败计数归零（fail-safe 方向：更宽松，但**不会**因此放行任何危险动作；'
       + '危险动作还要过 pending + 内存原文绑定 + actionHash 复核）',
   },
-  // ── 2026-10-11 卡【翻译官·批4·家人档地基】新增（wecom-hub · 1 条）──────────────────────
+  // ── 2026-10-11 卡【翻译官·批4·家人档地基】新增（channel-hub · 1 条）──────────────────────
   //   判据源：方案 §12.5-I6（`enter_chat` **未查证** ⇒ 落探针实测）+ ⑤ 包 §3.9 第 5 条「新台账必须登记」。
   {
-    name: 'wecom-hub/enter-chat-probe.json', schemaVersion: 1, persistence: 'persistent',
+    name: 'channel-hub/enter-chat-probe.json', schemaVersion: 1, persistence: 'persistent',
     onDemand: true,
     onDemandWhy: '`event.enter_chat` 实测探针：**只有那个事件真的来过**才建这份文件（没有 ⇒ 不落盘，'
       + '这本身就是"未触发过"的证据）',
@@ -1364,93 +1364,93 @@ export const STATE_FILES = [
     syncWhy: '**本机 hub 的运行时事实**（哪台机的长连接收到过该事件）—— 跨机共享会让对端把本机的探针读数当自己的',
     loss: '丢失 = 只剩"是否触发过"这一个问题的取证断档（功能不受影响）；重跑即从 0 重新累计',
   },
-  // ── 2026-10-11 卡【翻译官·批5-3·图片】新增（wecom-hub · 1 条）──────────────────────────
+  // ── 2026-10-11 卡【翻译官·批5-3·图片】新增（channel-hub · 1 条）──────────────────────────
   //   判据源：本卡 prompt 任务④「素材目录纳入清理口径（写进文档）」+ ⑤ 包 §3.9 第 5 条。
-  //   📌 **订正注（2026-11-04 · 卡「企微非文字-1」R-013 · 只加注不改下文原句）**：下面说"**唯一**会把用户
-  //      内容**实体**落盘的地方"仍然成立（媒体素材 = 入站用户内容）；但 wecom-hub 里**落盘的内容实体**自此有
-  //      **第二处** = `wecom-hub/media/<日期>/outbox/`（长文转 .md）——它存的是**出站**正文（本鱼回给主人的话），
+  //   📌 **订正注（2026-11-04 · 卡「通道非文字-1」R-013 · 只加注不改下文原句）**：下面说"**唯一**会把用户
+  //      内容**实体**落盘的地方"仍然成立（媒体素材 = 入站用户内容）；但 channel-hub 里**落盘的内容实体**自此有
+  //      **第二处** = `channel-hub/media/<日期>/outbox/`（长文转 .md）——它存的是**出站**正文（本鱼回给主人的话），
   //      **不是用户内容**，所以不推翻"唯一"这个判定，只在此标明两处落盘实体各自的分类。条目见本段末尾。
-  //   📌 **订正注（2026-11-04 · 卡「企微非文字-3」R-008 · 文件入站 · 只加注不改下文原句）**：本条目
-  //      （`wecom-hub/media/`）**自 2026-11-04 起管两类入站实体**，不只图片：
+  //   📌 **订正注（2026-11-04 · 卡「通道非文字-3」R-008 · 文件入站 · 只加注不改下文原句）**：本条目
+  //      （`channel-hub/media/`）**自 2026-11-04 起管两类入站实体**，不只图片：
   //        ① 图片 `media/<日期>/<msgid>.<ext>`（png/jpg/gif/webp —— 10-11 起）；
   //        ② **文件** `media/<日期>/<msgid>-<净化名>.<ext>`（pdf/docx/xlsx/zip/csv/md/txt —— 本卡起）。
   //      ⇒ 下方 retention 里「扩展名白名单 = png/jpg/gif/webp」与「唯一到图片字节」两句**已被这条扩写**；
   //        文件支的落盘扩展名**只到 `{csv, md, txt}`**（纯文本一律收，但绝不让 `.ps1/.bat/.js` 带可执行扩展名落地，
-  //        真源 = `tools\wecom-hub\lib\inbound-common.mjs#sniffDocType`）。
+  //        真源 = `<宿主工具目录>\inbound-common.mjs#sniffDocType`）。
   //        其余口径（按日期分目录 · keepDays 单一真源 `imageInbound.keepDays` · `image-ctl.mjs clean` 是唯一删除口 ·
   //        sync:false · 可丢类）**全部不变** —— 文件素材与图片**同一个根**，所以不新增条目（审核 I12 允许的形态）。
-  //   📌 **订正注（2026-11-04 · 卡「企微非文字-4」R-009 · 视频入站 · 只加注不改下文原句）**：本条目**再扩一类**：
+  //   📌 **订正注（2026-11-04 · 卡「通道非文字-4」R-009 · 视频入站 · 只加注不改下文原句）**：本条目**再扩一类**：
   //        ③ **视频** `media/<日期>/<msgid>-video.mp4`（或 `.webm`）+ 它的**帧子目录**
   //           `media/<日期>/<msgid>/frames/frame-<N>.jpg`（抽 6 帧，每张 ≥1 KB）—— 本卡起。
   //      ⇒ "唯一到图片字节"这句**进一步被扩写**：实体现在有三类（图片 / 文件 / 视频与帧），但**同一个根**
-  //        （`wecom-hub/media/`）⇒ 仍**不新增条目**；8 字段口径逐条对齐如下（审核 I12 要求"写满 8 字段"）：
+  //        （`channel-hub/media/`）⇒ 仍**不新增条目**；8 字段口径逐条对齐如下（审核 I12 要求"写满 8 字段"）：
   //          · schemaVersion = null（目录型，无版本键）；persistence = volatile（同一行已给）；
   //          · onDemand = true（只在真收到视频时才建）；onDemandWhy 同上条（没收到 ⇒ 不存在）；
   //          · retention = 跟 `imageInbound.keepDays`（**现 30 天**；2026-11-04 收尾卡由 14 改）+ `image-ctl.mjs clean` 唯一删除口
   //            （帧目录在**日期目录之内** ⇒ 结构上被同一个守门管到，方案 §3.5 第 6 条）；
   //          · sync = false（同条）；loss = **可重抽**：视频字节还在 ⇒ 删了帧能再抽一次；视频也被清理 ⇒ 帧不可恢复
-  //            （但源在企微侧，主人重发即可）⇒ 与图片同属**可丢**类，**不影响台账与判定**。
+  //            （但源在外部通道侧，主人重发即可）⇒ 与图片同属**可丢**类，**不影响台账与判定**。
   //      🔴 ffmpeg **不写任何东西到本目录之外**（帧目录 `frames.tmp-*` 的临时件同父目录、抽完即改名或删除）；
   //         `extractFrames` 删旧目录前有**守门**（只删 `mediaRoot` 之下的路径，别的一律拒动）。
-  //   🔴 **口径例外（经主人 2026-10-11 授权）**：这是 wecom-hub 里**唯一**会把用户内容**实体**落盘的地方
+  //   🔴 **口径例外（经主人 2026-10-11 授权）**：这是 channel-hub 里**唯一**会把用户内容**实体**落盘的地方
   //      （其余台账 / 审计一律"只记摘要 + 长度 + 判定"）；例外范围**只到图片字节**——
   //      下载链接、aeskey、正文文本**一律不落盘、不进任何仓、不外发**。
-  //   📌 **订正注（2026-11-04 · 卡「企微非文字-5」收尾 · 只加注不改上文原句 · 审核 I12 要求）**：上三行里
-  //      「例外范围**只到图片字节**」**已过期** —— 自 2026-11-04 四件非文字上线起，同一个 `wecom-hub/media/` 根下
+  //   📌 **订正注（2026-11-04 · 卡「通道非文字-5」收尾 · 只加注不改上文原句 · 审核 I12 要求）**：上三行里
+  //      「例外范围**只到图片字节**」**已过期** —— 自 2026-11-04 四件非文字上线起，同一个 `channel-hub/media/` 根下
   //      **共有四类实体**，都属这一条例外的授权范围（口径不变的那半句 = 链接 / aeskey / 正文文本仍一律不落盘）：
   //        ① **图片** `media/<日期>/<msgid>.<ext>`（png/jpg/gif/webp）—— 10-11 起；
   //        ② **文件** `media/<日期>/<msgid>-<净化名>.<ext>`（pdf/docx/xlsx/zip/csv/md/txt）—— 卡 3 起；
   //        ③ **视频** `media/<日期>/<msgid>-video.{mp4,webm}` + 帧 `media/<日期>/<msgid>/frames/frame-<N>.jpg` —— 卡 4 起；
   //        ④ **出站附件** `media/<日期>/outbox/reply-<YYYYMMDD-HHmmss>-<sha8>.md` —— 卡 1 起（**出站正文、不是用户内容**，
-  //           挂同一根只为共用清理守门；条目见本段末尾 `wecom-hub/media/<日期>/outbox/`）。
+  //           挂同一根只为共用清理守门；条目见本段末尾 `channel-hub/media/<日期>/outbox/`）。
   //      ⇒ **四类各自的 loss 分开判**（别拿一句话概括四类）：
   //        · ①②③（用户内容实体）丢 = 会话里那条路径失效（`read_document` / `read_image` 打不开），
   //          台账与判定**不受影响**，让主人/家人**重发**即可 ⇒ **可丢**；
-  //        · ③ 的**帧**另有增量口径：视频字节还在 ⇒ 删了帧**能重抽**；视频也被清理 ⇒ 帧不可恢复（源在企微侧，重发即可）；
-  //        · ④（出站附件）丢 = 本地副本没了，**企微里那条消息与附件照旧**（`media_id` 3 天有效，过期也不影响已发消息）⇒ **可丢**。
+  //        · ③ 的**帧**另有增量口径：视频字节还在 ⇒ 删了帧**能重抽**；视频也被清理 ⇒ 帧不可恢复（源在外部通道侧，重发即可）；
+  //        · ④（出站附件）丢 = 本地副本没了，**外部通道里那条消息与附件照旧**（`media_id` 3 天有效，过期也不影响已发消息）⇒ **可丢**。
   //      清理口径：全部由 `imageInbound.keepDays`（**30 天**，2026-11-04 统一）驱动，删除口仍是 `image-ctl.mjs clean`
-  //      （唯一，`…/wecom-hub/media` 守门）+ 出站专用的 `outbound-ctl.mjs clean`（同 30 天，守门白名单 `{media, outbox}`）。
+  //      （唯一，`…/channel-hub/media` 守门）+ 出站专用的 `outbound-ctl.mjs clean`（同 30 天，守门白名单 `{media, outbox}`）。
   {
-    name: 'wecom-hub/media/', schemaVersion: null, persistence: 'volatile',
+    name: 'channel-hub/media/', schemaVersion: null, persistence: 'volatile',
     onDemand: true,
-    onDemandWhy: '企微图片素材目录：**只有真收到过图片**才建（没收到 ⇒ 不存在，这本身就是"没收到过图"的证据）',
+    onDemandWhy: '外部通道图片素材目录：**只有真收到过图片**才建（没收到 ⇒ 不存在，这本身就是"没收到过图"的证据）',
     retention: '按本地日期分目录 `media/<YYYY-MM-DD>/<msgid>.<ext>`（扩展名白名单 = png/jpg/gif/webp，'
       + '**魔数嗅探**判定、不看扩展名；单张上限缺省 10 MB）。清理口径 = `hub-config.json#imageInbound.keepDays`'
       + '（现 **30 天**；2026-11-04 收尾卡由 14 改 —— 与 `media-clean.cmd --days 30` 两处同改，审核 I4）'
-      + '；一键清理 `node <workspace>\\tools\\wecom-hub\\image-ctl.mjs clean [--days N] --apply`'
+      + '；一键清理 `node <宿主工具目录>\\image-ctl.mjs clean [--days N] --apply`'
       + '（**缺省 dry-run**，只有 --apply 才真删）。',
     sync: false,
     syncWhy: '① 里面是**用户发来的原始内容实体**（图片字节）—— 跨机共享 = 把主人/家人的私人图片复制到另一台机，'
       + '与"零正文 / 最小出机面"口径直接冲突；② 它是**单机事实**（只有持长连接那台机收得到图）'
-      + '⇒ 与本表内 `wecom-hub/*` 各条同款判定（单机独占，理由见该段段首注）。',
+      + '⇒ 与本表内 `channel-hub/*` 各条同款判定（单机独占，理由见该段段首注）。',
     loss: '丢失 = 那几张图在会话里"路径失效"（DSH 侧 read_image 打不开）；**不影响任何台账与判定**，'
       + '让对端重发即可 ⇒ 属**可丢**类（时间窗口素材，非凭据、非台账、非配置）。',
   },
-  // ── 2026-11-04 卡「企微非文字-1」（R-013 · 长文当文件发）新增（wecom-hub · 1 条）────────────
-  //   判据源：`docs\方案-V3功能面-企微非文字-20261104.md` §3.1 + §3.5 第 6 条 + 审核档 I6 / I12。
-  //   🔴 与上一条 `wecom-hub/media/` 的关系：**同根不同类** —— media/<日期>/ 存**入站**素材（用户发来的图），
+  // ── 2026-11-04 卡「通道非文字-1」（R-013 · 长文当文件发）新增（channel-hub · 1 条）────────────
+  //   判据源：§3.1 + §3.5 第 6 条 + 审核 I6 / I12（出处不在本包内）。
+  //   🔴 与上一条 `channel-hub/media/` 的关系：**同根不同类** —— media/<日期>/ 存**入站**素材（用户发来的图），
   //      outbox/ 存**出站**附件（我们把长文转成的 .md，内容是本鱼回给主人的话）⇒ 不属"用户内容实体"。
-  //   ⚠️ 为什么嵌在 media 日期目录下（而不是独立 `wecom-hub/outbox/`）：`image-ctl.mjs:117` 的守门硬编码
-  //      「`…/wecom-hub/media`」，独立成兄弟目录就**结构上**落在守门之外（方案 §3.5 第 6 条）。
+  //   ⚠️ 为什么嵌在 media 日期目录下（而不是独立 `channel-hub/outbox/`）：`image-ctl.mjs:117` 的守门硬编码
+  //      「`…/channel-hub/media`」，独立成兄弟目录就**结构上**落在守门之外（方案 §3.5 第 6 条）。
   {
-    name: 'wecom-hub/media/<日期>/outbox/', schemaVersion: null, persistence: 'volatile',
+    name: 'channel-hub/media/<日期>/outbox/', schemaVersion: null, persistence: 'volatile',
     onDemand: true,
     onDemandWhy: '长文转文件（R-013）**只在真发过超阈值长文**时才建（>100 行 或 >4000 字）；没发过 ⇒ 不存在',
     retention: '按本地日期分目录 `media/<YYYY-MM-DD>/outbox/reply-<YYYYMMDD-HHmmss>-<sha8>.md`（文件名**纯 ASCII**）；'
       + '清理口径 = `hub-config.json#outboundFile.keepDays`（缺省 **30 天**）；'
-      + '一键清理 `node <workspace>\\tools\\wecom-hub\\outbound-ctl.mjs clean [--days N] --apply`'
+      + '一键清理 `node <宿主工具目录>\\outbound-ctl.mjs clean [--days N] --apply`'
       + '（**缺省 dry-run**，只有 --apply 才真删）。'
       + '⚠️ `image-ctl.mjs clean`（30 天）**不会**连带删它：超期日期目录若含未到期附件 ⇒ 只清该目录的其余内容。',
     sync: false,
     syncWhy: '① 里面是**出站正文的实体**（本鱼回给主人的长答原文）—— 跨机共享 = 把一段对话内容复制到另一台机，'
       + '与"零正文 / 最小出机面"口径直接冲突；② 它是**单机事实**（谁发谁落，另一台没有这段上下文）'
-      + '⇒ 与本表内 `wecom-hub/*` 各条同款判定（单机独占，理由见该段段首注）。',
-    loss: '丢失 = 手机上那个 `.md` 附件对应的**本地副本**没了（附件本身已躺在主人企微里，消息不丢）；'
+      + '⇒ 与本表内 `channel-hub/*` 各条同款判定（单机独占，理由见该段段首注）。',
+    loss: '丢失 = 手机上那个 `.md` 附件对应的**本地副本**没了（附件本身已躺在主人外部通道里，消息不丢）；'
       + '此后新长文照常生成新附件 ⇒ 属**可丢**类（时间窗口产物，非凭据、非台账、非配置）。',
   },
   {
-    name: 'wecom-hub/', schemaVersion: null, persistence: 'persistent',
-    // 【2026-11-04 · 卡「企微非文字-5」收尾】补齐 8 字段：本条原来只有 7 项（缺 onDemand / onDemandWhy）
+    name: 'channel-hub/', schemaVersion: null, persistence: 'persistent',
+    // 【2026-11-04 · 卡「通道非文字-5」收尾】补齐 8 字段：本条原来只有 7 项（缺 onDemand / onDemandWhy）
     //   ⇒ 语义按现场实测填：目录**跑过一次 hub 才会有**（本机 这份是测试残留：hub-ctl.log / hub-token /
     //   inbound.jsonl / sessions.json 四件），生产实体只在 对端机 ⇒ 与段首「实体只落 对端机」同款，判 onDemand。
     onDemand: true,
@@ -1461,7 +1461,7 @@ export const STATE_FILES = [
     sync: false,
     syncWhy: '目录内是本机**凭据与进程态**（`hub-token` 出口令牌 / `hub.lock` 单实例锁 / `hub.log` / '
       + '演练报告 / 控制留痕）：令牌跨机会让对端能调本机出口；锁跨机会让对端误判"已有实例"而拒启'
-      + '（同 `wecom-notify-token.json` 款：凭证派生物一律单机）',
+      + '（同 `channel-notify-token.json` 款：凭证派生物一律单机）',
     loss: '令牌丢失 = 重新生成（调用方需重读）；锁丢失 = 无害（启动时重建）；日志与留档丢失 = 排障与演练取证断档',
   },
   // ── 【2026-10-14 · 卡「大管家 V2.9.X 收口尾段 · 控制室红项」】补登：`ws-rehome-once.json` ──────────
@@ -1578,7 +1578,7 @@ export const STATE_FILES = [
   },
   {
     // 家人身份表（唯一的"谁能用小秘书 + 能用哪些能力位"真源）。
-    //   读/写实现唯一 = `tools\wecom-hub\lib\identity.mjs`（CLI 壳 = `tools\dsh-butler\secretary-user.mjs`，
+    //   读/写实现唯一 = `<宿主工具目录>\identity.mjs`（CLI 壳 = `tools\dsh-butler\secretary-user.mjs`，
     //   缺省 dry-run、`--apply` 才写、写前自动备份到 `<home>\_archive\secretary-users\<ts>\`）。
     //   字段口径：文件里是 `version: 1` ⇒ 按 `ws-rehome-once.json` 先例登记 `null`。
     name: 'secretary-users.json', schemaVersion: null, persistence: 'persistent',
@@ -1587,11 +1587,11 @@ export const STATE_FILES = [
       + '只有跑过 `secretary-user.mjs add … --apply` 的机器才落盘 ⇒ 标 onDemand 才不会把本机红项搬去对端的 S5',
     retention: '单份（人工维护，无自动过期）：users{userid → name/role/caps/limits/llm/notified/addedAt/addedBy}',
     sync: false,
-    syncWhy: '身份表绑的是**本机那条企微长连接**（userid 只在这台机收得到消息）；跨机同步会把对端的 userid 带过来 ⇒ '
+    syncWhy: '身份表绑的是**本机那条外部通道长连接**（userid 只在这台机收得到消息）；跨机同步会把对端的 userid 带过来 ⇒ '
       + '本机按一条不存在的连接授权（假放行）；且 userid 属个人信息，不该作为状态文件跨机漂流'
-      + '（真源口径 = `tools\\wecom-hub\\lib\\identity.mjs` 头注「唯一权威源」+ 服务面隐私包 §3.3）',
+      + '（真源口径 = `<宿主工具目录>\\identity.mjs` 头注「唯一权威源」+ 服务面隐私包 §3.3）',
     loss: '丢失 = 按 `default: deny` **所有人一律拒**（含主人本人）⇒ 家人档整条不可用；'
-      + '重建 = 按企微导出的 userid 跑 `node tools\\dsh-butler\\secretary-user.mjs add <userid> … --apply` 逐条重录'
+      + '重建 = 按外部通道导出的 userid 跑 `node tools\\dsh-butler\\secretary-user.mjs add <userid> … --apply` 逐条重录'
       + '（`_archive\\secretary-users\\<ts>\\` 有写前备份可回滚）',
   },
   {
@@ -1633,19 +1633,19 @@ export const STATE_FILES = [
     loss: '丢失 = 历史上「哪次绑卡输出异常」的线索消失（不影响任何功能判定；下一行继续写）',
   },
   // ── 【2026-10-28 · 卡「V3 功能面 · 文档同步告警」】新件两条：`notify-docsync.json` + `notify-docsync-state.json` ──
-  //   真源 = `docs\交付报告-V3功能面-文档同步告警-20261028.md`；脚本 `tools\dsh-butler\notify-docsync-watch.mjs`
+  //   真源 = 内部文档同步告警方案（不在本包内）；脚本 `tools\dsh-butler\notify-docsync-watch.mjs`
   //   （tickd job `notify-docsync`，30 分钟，`--apply`）。
   //   为什么必须登记：registry-audit 的 **S4「磁盘有必须登记」** 现跑就点了名 —— 不登记则
   //   schemaVersion 迁移校验、跨机同步判定、丢失后果三项**全无依据**。
   //   两条**都** `sync: false`（判据同 butler-watch-state.json 款，但理由各有各的）：
-  //     · 配置里含主人的**微信 userId / 机器人账号**（单机登录身份）⇒ 跨机同步 = 把别人的收件人串过去；
+  //     · 配置里含主人的**外部通道 userId / 机器人账号**（单机登录身份）⇒ 跨机同步 = 把别人的收件人串过去；
   //     · 状态里全是**时间窗口 / 每日计数 / 去重**（`day` / `dayCount` / `lastNotifiedAt`）⇒
   //       两机共享会互相压制告警（判据原文：「时间窗口 → 禁止同步」）。
   {
     name: 'notify-docsync.json', schemaVersion: null, persistence: 'persistent',
     retention: '单份（人工维护；`enabled:false` = 一条即停，不必删文件）',
     sync: false,
-    syncWhy: '含**主人自己的微信收件人 userId + 机器人账号 id**（单机登录身份）—— 跨机同步等于把本机的收件人'
+    syncWhy: '含**主人自己的外部通道收件人 userId + 机器人账号 id**（单机登录身份）—— 跨机同步等于把本机的收件人'
       + '带到对端，对端若没登同一个账号就会「发不出去还静默」；且 `enabled` 是**本机**的开关意图',
     loss: '丢失后脚本回落内置缺省（`enabled:true` 但 `account` / `to` 为空）⇒ **发送闸会拦下并记 `send-failed`**，'
       + '即「装了但发不出去」，**不会误发**；重建 = 按报告 §关回 那份 JSON 手抄一遍',
@@ -1676,7 +1676,7 @@ export const STATE_FILES = [
   //   来由（卡 81551bdf 验收时主会话指出，**不是** registry-audit 点出来的 —— S4 只在文件已落盘时才会喊，
   //   本文件当时还没生成过）：家人白名单的**变更台账**是"谁在什么时候改过白名单"的**唯一证据**，
   //   不登记 ⇒ 重建机器 / 换盘时这份账会悄悄丢（且丢的是不可重建的那一类）。
-  //   写者 = 唯一写入口 `tools\wechat-bridge\ops\set-family-allowlist.mjs`
+  //   写者 = 唯一写入口 `<宿主工具目录>\set-family-allowlist.mjs`
   //     （每写一次一行：add / remove / set / rollback / noop；含 beforeSha→afterSha、peer、drill、
   //       `allowEmpty`(闸 ⓪ 逃生口)、`unregistered`）。
   //   ⚠️ **按需生成**（不标 onDemand 就会当场吃 S5「登记有必须落盘」红）：2026-10-30 登记时实测
@@ -1691,7 +1691,7 @@ export const STATE_FILES = [
     name: 'family-allowlist-journal.jsonl', schemaVersion: 1, persistence: 'persistent',
     onDemand: true,
     onDemandWhy: '白名单变更台账：**只在真写白名单时**创建（首条写入前不存在 = 还没改过名单 = 正常稳态）；'
-      + '`--list` / dry-run / 闸拒动都不落盘（写者 = tools\\wechat-bridge\\ops\\set-family-allowlist.mjs）',
+      + '`--list` / dry-run / 闸拒动都不落盘（写者 = <宿主工具目录>\\set-family-allowlist.mjs）',
     retention: '永久（append-only：一条 = 一次 add/remove/set/rollback/noop），随写入线性增长、单文件目前 KB 级',
     sync: false,
     syncWhy: '台账记的是**本机写入口这一侧**的动作（localPath / peerPath / peer host / drill 标记 + 两机 sha 变化）'
@@ -1702,7 +1702,7 @@ export const STATE_FILES = [
   },
   // ── 【2026-11-02 · 卡 6f121702「统筹线·脑子」steward.mjs 甲层】新登：`steward-state.json` ──────────
   //   来由：统筹线的「脑子」（tickd job `steward`，每天 08:20 只读产物→排序→写账，零模型调用）的
-  //   唯一持久状态。口径真源 = `docs\方案-掌柜统筹线-v0.1-20261101.md` §2.3（内容已到 v0.5）。
+  //   唯一持久状态。口径 = §2.3（内容已到 v0.5；出处不在本包内）。
   //   内容 = 六必填 + heartbeat / lastReport / decisions[] / instructions[] / raiseCounts[] / reports[]
   //          + 【2026-11-02 · 卡 C10】attentions[]（「等人工决定」的唯一来源，`{cardId, question, options[],
   //            askedAt, answeredAt}`；写入口 `steward.mjs --attention-add/--attention-answer`；
@@ -1727,14 +1727,14 @@ export const STATE_FILES = [
   },
   // ── 【2026-11-02 · 卡 C12-A「Thread 与订阅数据面」】新登：`steward-threads.json` ──────────────
   //   来由：统筹线 C12 拆三段（A 地基 / B 扇出 / C 唤醒）的 **A 段产物** = "Thread 与 trigger_thread
-  //   关系表"（`docs\补充-SuperAgent架构精读-20261102.md` §A-5 把「Thread 对象」列为最贵那一步）。
+  //   关系表"（架构精读 §A-5 把「Thread 对象」列为最贵那一步；出处不在本包内）。
   //   写者只有一个：`tools\dsh-butler\steward-threads.mjs`（new/bind/unbind 三个写动作，
   //   读侧 list/show 只读，对看板**只有一条 GET**）。
   //   形状：`{version:1, threads:[{id:'th-<8hex>', title, line, createdAt, cards:[], messages:[]}]}`；
   //   `messages[]` 在 B 卡落地前**恒为空数组**（本件只建不写）。
   //   🔧 **2026-11-02 · 卡 C12-B 订正**（只标注、不改上文）：`messages[]` 自 `--thread-post --apply` 起
   //      **会被追加投递记录**（形状 `{threadId, cardId, sessionId, title, at, ok, via, error?, text}`）；
-  //      **干跑仍零写入**、其余五个动作仍不碰它。真源 = `docs\交付报告-统筹线C12B-扇出-20261102.md`。
+  //      **干跑仍零写入**、其余五个动作仍不碰它（改动出处不在本包内）。
   //   ⚠️ 三条判据要点：
   //     ① **禁止跨机同步** —— 与 `steward-state.json` 同款：统筹线状态是**单机事实**（方案 §1.4 第一版
   //        单机 本机）；且「两机的 thread 撞了怎么合并」B/C 段才有扇出/写回口径，现在定不了
@@ -1753,7 +1753,7 @@ export const STATE_FILES = [
       + '但"哪几张卡本来是一件事"要人工再判；本件无自动备份（B 卡起再说）',
   },
   // ── 【2026-11-02 · 卡 C12-D「Disposition 行流 + 两值副作用」】新登：`steward-disposition.jsonl` ──────
-  //   来由：`docs\补充-SuperAgent架构精读-20261102.md` §A-3/§A-4 —— 原型把「这条事件到哪了」记成
+  //   来由：架构精读 §A-3/§A-4（出处不在本包内）—— 原型把「这条事件到哪了」记成
   //   **一张表、每 trigger 一行**（同时回答"为什么没处理 / 到了哪些卡 / 一生"）；我们的 `instructions[]`
   //   只回答"投给谁、accepted"，答不出"这条为什么没处理"。本文件就是那张表的**行流**。
   //   形状：每行一个 JSON 对象 `{at, kind, cardId?, reason, detail?, runId}`；
@@ -1784,7 +1784,7 @@ export const STATE_FILES = [
   },
   // ── 【2026-11-02 · 卡「统筹线 R1-6 · Router 守护与巡检」】新登：`router-guard-state.json` ──────
   //   来由：巡检器具 `tools\dsh-butler\router-guard.mjs`（tickd job `router-guard`，每 30 分钟）的
-  //   自家状态件。真源 = `docs\方案-Router Session-20261102.md` §3 R1-6 行。
+  //   自家状态件。口径 = §3 R1-6 行（出处不在本包内）。
   //   形状：`{version:1, updatedAt, lastRun:{at,apply,tally,workspaceId,currentSession}, alertMarks:{<sig>:<epochMs>}}`。
   //   用途只有一个：**报警去重**（同一条「站着的报警」6 小时内只落一行 `butler-alert.log`）；
   //   `lastRun` 是给人看「上一轮什么时候跑的、五项各是什么」的快照。
@@ -1830,8 +1830,7 @@ export const STATE_FILES = [
       + '（流水只记录、不驱动动作），但事后回溯要人工翻会话与交付报告',
   },
   // ── 【2026-11-09 · 卡「N1 催办判据」】两档：`router-status-snapshot.json` + `router-nudge-state.json` ──
-  //    真源 `docs\方案-大管家Router自省与改进-V1-20261108.md` §N1（L283-297）+ 交付报告
-  //    `docs\交付报告-统筹线-N1催办判据-20261109.md`。
+  //    口径 = §N1（L283-297）+ 对应交付报告（出处不在本包内）。
   //    🔴 为什么要这两档：N1 把「催」从"回合里想起来"改成机械判据 —— 判据要读**车况快照**（不每轮现算
   //      `router-act status`，2.3~3.1 s/次），催过没催过要**落盘**（内存里的限流重启就忘）。
   //    写口各一个：快照只由 `router-status-snapshot.mjs`（tickd job `router-status-snapshot`，默认关）写；
@@ -1869,7 +1868,7 @@ export const STATE_FILES = [
     onDemandWhy: '只在「派生被拒」时存在；成功即删 ⇒ 稳态下不存在属正常（不是漏写）',
   },
   // ── 【2026-11-06 · 卡「Router 静默收信」】四条：`router-inbox` 系列的档 ─────────────────────
-  //    真源 `docs\方案-统筹线-Router静默收信-20261106-V3.md` §4.2（四档 + 两缓存）。
+  //    口径 = §4.2（四档 + 两缓存；出处不在本包内）。
   //    🔴 为什么必须登记：这四个档由本卡新建，`butler-registry-audit` 的 S4「磁盘有必须登记」当场报红
   //       （2026-11-06 施工时实测：`❌ router-inbox.jsonl` / `❌ router-inbox-target.json` 两条）。
   //       写法与 `router-ops.jsonl` 同款：**只登记位、不改任何写入行为**。
@@ -2020,10 +2019,10 @@ export const EXTERNAL_STATE = [
   //   判定 = **暂不登记（未落地的设计件）**，三条实测依据：
   //     ① 磁盘上不存在：`Test-Path ~/.dsh/butler-sync-state.json` = **False**（2026-10-10 实测）；
   //     ② **全库代码零引用**：`grep -r butler-sync-state tools/` 零命中 —— 唯一出现处是设计文档
-  //        `docs\大管家v2.5-P9会交接与云中继方案-20260910.md` §6.5 表格与缺口台账，
+  //        内部 v2.5 方案 §6.5 表格与缺口台账（出处不在本包内），
   //        **没有任何 .mjs 读或写它**；
   //     ③ 它的唯一消费场景 = **云中继 H5**，而 H5 **未开工**
-  //        （`docs\必拍清单-四组汇总-20260923.md`：「H5（云中继）…没开工」）。
+  //        （四组汇总的必拍清单：「H5（云中继）…没开工」；出处不在本包内）。
   //   为什么不"先登记声明期望"：本表的 `persistence / sync / loss` 三列必须对得上**真实读写点**；
   //     登记一个零读写点的文件会把「登记 ↔ 磁盘 ↔ 代码」三角关系做成假的（S4 反向断言也照不出它）。
   //   重启条件（触发式）：**H5 开工并真落盘后**，在**同一张卡**里补进 `STATE_FILES`
@@ -2096,7 +2095,7 @@ export function expandHostPlaceholder(name, host = '*') {
  *   （旧 `--check` 是「同一张登记表对同一张表」⇒ 结构上永远绿，发现不了）。
  *
  * 映射不写死前缀：一律走 `state-paths.mjs#toNewName()`（改名逻辑再变，这里自动跟随）。
- * 非 `butler-` 名（`upgrade-lock` / `secretary-push.jsonl` / `wecom-hub/` 等）原样返回一条。
+ * 非 `butler-` 名（`upgrade-lock` / `secretary-push.jsonl` / `channel-hub/` 等）原样返回一条。
  * @param {string} name 登记名（可含 `<host>` 占位；调用方自行决定展开时点）
  * @returns {string[]} `[旧名, 新名]` 或 `[原样名]`
  */
