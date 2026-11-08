@@ -378,7 +378,7 @@ export const LOCK_REGISTRY = [
   //      的「auditRegistry({jobs: JOBS}) 零问题」把守）—— 2026-09-12 `reconcile` 与 2026-09-20 本行
   //      是同一口径；**G23-1 交付时正是漏了这一行**，registry-audit 报 ❌（job 已注册、锁未登记）。
   //   本脚本**自身无 acquireTickLock**（职责仅两件：读日报抽白名单计数 → 交唯一出口
-  //      `tools\secretary-notify.mjs`；它不发消息、不写台账、不判闸）⇒ 标 `lockRunner: true`
+  //      宿主侧的通道脚本（不进本包）；它不发消息、不写台账、不判闸）⇒ 标 `lockRunner: true`
   //      走包装层（抢锁 → 动态 import → 释放），防"手动直跑 / 计划任务"绕过 tickd 与调度并发
   //      （同 `watchfs` / `daily` / `weekly` / `imagegen*` 先例）。
   //   TTL 10 分钟：一轮 = 读日报（~65 KB）+ 出口连外部通道长连接（连→认证→发→断，实测 <1 s）+ 写台账，

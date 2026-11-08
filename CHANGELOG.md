@@ -58,7 +58,7 @@
 - **通知注入点** `src/dsh-butler/lib/notify.mjs`（`@kira905/dsh-butler-engine/notify`）：
   - 接口 `notify({ level, title, body, dedupeKey, channel })`；宿主用 `setNotifier(fn)` 接自己的通道。
   - **默认实现 = console + no-op**：往 stderr 打一行、返回 `{ ok:false, error:'no-channel' }` —— 看得见，但不假装发出去了。
-  - **不带任何具体通道**（企业微信 / 微信 / 语音都不在包里），开关默认关；同日同键只发一次。
+  - **不带任何具体通道**（企业级 IM / 个人 IM / 语音都不在包里），开关默认关；同日同键只发一次。
 - **自检**：新增 `test/notify-seam.mjs` 19 条（默认 no-op / 注入后真发 / 去重 / 开关 / 六个入口能跑）；`smoke.mjs` 18 条不变。
 
 ### 已知限制（0.2.0 追加）

@@ -349,7 +349,7 @@ export const JOBS = [
   //   ⚠️ **默认关**（交付/放行分离，R3 锁后交付）：本行只落*表位*，不自动开跑。
   //      放行 = `node tools\dsh-butler\butler-autonomy-cli.mjs job on secretary-morning --reason "..."`（**只改开关不改代码**）；
   //      开跑前还须确认闸文件 `~/.dsh/butler-secretary.json#switches.push` 为 true（出口每次先读它）。
-  //   ⚠️ 出口唯一：本 job 只调 `secretary-morning.mjs`（取数），真正发送/闸门/预算/台账全在 `tools\secretary-notify.mjs`。
+  //   ⚠️ 出口唯一：本 job 只调 `secretary-morning.mjs`（取数），真正发送/闸门/预算/台账全在宿主侧的通道脚本里（不进本包）。
   { id: 'secretary-morning', label: '服务面早报（外部通道推送 · 默认关）', at: '09:05', initialMs: 0,
     script: 'secretary-morning.mjs', args: [], dir: HERE },
   // ── 2026-11-02（卡 6f121702「协调线·脑子」steward.mjs 甲层）：`steward` ──────────────────────
