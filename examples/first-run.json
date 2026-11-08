@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "about": "第一次装完「先开哪几条」。这份文件是给人和 agent 一起抄的模板：照 jobs[].id 打开开关，再照 verify 里的命令确认它真的跑过一轮。全部 4 条都满足三条硬约束：① 不碰外部通道 / 家人数据 / 生活侧数据；② 只读或可逆（不回滚不了的东西、不发外部消息）；③ 不依赖任何本机私有路径（脚本都在本包里）。",
+  "enable": {
+    "file": "~/.dsh/butler-autonomy.json",
+    "note": "开关是这个文件里的 jobs.<id>.enabled。文件不存在就新建；已存在就**把 jobs 里缺的键加进去**，别整份覆盖（里面可能还有别的作业的开关与理由）。",
+    "shape": {
+      "schemaVersion": 1,
+      "jobs": {
+        "card-watchdog": {
+          "enabled": true,
+          "by": "you",
+          "since": "2026-01-01T00:00:00.000Z",
+          "why": "first run: 只想看它报什么，不改卡"
+        }
+      }
+    },
+    "afterEdit": "改完要重启常驻调度进程才生效（JOBS 是启动期常量）：butler-tickd --stop 然后 butler-tickd --ensure。"
+  },
+  "jobs": [
+    {
+      "id": "card-watchdog",
+      "label": "盯卡巡检",
+      "every": "5m",
+      "script": "jobs/butler-card-watchdog-tick.mjs",
+      "why": "最安全的一条：它只**报**假结算 / 假 running，不改卡、不叫醒会话。第一次装完想确认「调度真的在跑」就开它。",
+      "expect": "看点：状态 ok，输出里是「体检完成」这类一行结论；没有看板时是空转 ok（不是失败）。"
+    },
+    {
+      "id": "barewatch",
+      "label": "裸跑期观测采集",
+      "every": "5m",
+      "script": "jobs/barewatch-tick.mjs",
+      "why": "只采集观测数据，落到自己的状态目录；不读也不写你的业务数据。",
+      "expect": "看点：状态 ok，几百毫秒跑完。"
+    },
+    {
+      "id": "vanish-watch",
+      "label": "大量消失告警",
+      "every": "5m",
+      "script": "jobs/dsh-vanish-watch.mjs",
+      "why": "observe 档：只观察「会话/文件大量消失」这种异常并留痕，不做任何处置。",
+      "expect": "看点：状态 ok；正常机器上它不会告警。"
+    },
+    {
+      "id": "queue",
+      "label": "队列推进巡检",
+      "every": "1m",
+      "script": "jobs/butler-queue-tick.mjs",
+      "why": "有任务看板时才有事做：卡进「待验收」后叫醒推进者。不碰外部通道；没有看板时是空转 ok。这一条适合**已经装了看板**的机器。",
+      "expect": "看点：状态 ok；没有卡待验收时输出里没有叫醒动作。"
+    }
+  ],
+  "verify": {
+    "note": "三步：看开关、跑一轮、看结果。命令里 <pkg> = 你装的包目录；全局安装时直接用 `butler-tickd` 这个命令名亦可。",
+    "steps": [
+      {
+        "what": "① 开关认到了吗",
+        "cmd": "node <pkg>/bin/butler-tickd.mjs --list",
+        "look": "jobs[].id 那几行开头是 🟢（而不是 🔴）"
+      },
+      {
+        "what": "② 真跑一轮（尊重开关，不加 --force）",
+        "cmd": "node <pkg>/bin/butler-tickd.mjs --once card-watchdog",
+        "look": "输出 `--once 启动: card-watchdog`（不是「被开关拦下」）"
+      },
+      {
+        "what": "③ 看它到底成没成",
+        "cmd": "node <pkg>/bin/butler-tickd.mjs --status",
+        "look": "jobs 里该 id 的 lastStatus = ok、runs 涨了、lastEndAt 是刚才；failures 不涨"
+      }
+    ]
+  },
+  "knownGaps": [
+    "tidy（收纳审计）在全新机器上会被「组件版本门」拦下（产品登记表里没有它），所以**没有**放进这一组。要跑它得先修版本门，见交付报告。",
+    "watchfs（磁盘层审计）直接跑 rc=0，但经 tickd 跑报 exit-1，原因未定位，也**没有**放进这一组。",
+    "memory-hit-collect 在空机器上状态是 deferred（没有可采的命中日志），不是 ok —— 它不是失败，但也不算「跑过一轮」。"
+  ]
+}

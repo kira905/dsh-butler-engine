@@ -32,6 +32,42 @@ npx butler-tickd --status    # JSON：每个 job 的最近结果（含 lastEntry
 
 `--list` 的 stdout 严格一行一条（有单测按行数对 `JOBS` 条数）；「缺脚本」的汇总行走 stderr。
 
+## 1.5 第一次装完先开哪几条（照这份抄）
+
+装完是**全关**的（见下一节），所以"装好了"和"它在干活"之间差一步：开开关。
+刚上手别一次全开 —— 先用一组**只读、可逆、不碰外部数据**的作业确认调度链真的通了。
+
+机器可读的模板在 **`examples/first-run.json`**（4 条作业 + 开关文件的确切形状 + 三步验收命令）。
+它为什么长这样：给 agent 抄的 —— 设置不对时，agent 照这份文件就能把开关改对。
+
+**文件放哪**：`~/.dsh/butler-autonomy.json`（Windows = `%USERPROFILE%\.dsh\butler-autonomy.json`）。
+不存在就新建；已存在就**往 `jobs` 里加键**，别整份覆盖（别人的开关与理由也在里面）。
+
+```json
+{
+  "schemaVersion": 1,
+  "jobs": {
+    "card-watchdog": { "enabled": true, "by": "you", "since": "2026-01-01T00:00:00.000Z", "why": "first run" },
+    "barewatch":     { "enabled": true, "by": "you", "since": "2026-01-01T00:00:00.000Z", "why": "first run" }
+  }
+}
+```
+
+`enabled` 是唯一判定字段（`false` 才是关）；`by` / `since` / `why` 是留痕，方便日后自己回看是谁为什么开的。
+改完**必须重启常驻进程**（`JOBS` 是启动期常量）：`butler-tickd --stop` 然后 `butler-tickd --ensure`。
+
+**怎么开、怎么看它真的跑了**（三步，逐条对得上才算通）：
+
+| 步 | 命令 | 看什么 |
+|---|---|---|
+| ① 开关认到了吗 | `butler-tickd --list` | 那几行开头由 🔴 变 🟢 |
+| ② 真跑一轮 | `butler-tickd --once card-watchdog` | 出现 `--once 启动: card-watchdog`（而不是「被开关拦下」） |
+| ③ 到底成没成 | `butler-tickd --status` | 该 id 的 `lastStatus: "ok"`、`runs` 涨了、`lastEndAt` 是刚才、`failures` 不涨 |
+
+同一组里为什么是这 4 条、哪几条这次没放进来的原因，都写在 `examples/first-run.json` 的
+`jobs[].why` 与 `knownGaps` 里（包括 `tidy` 被版本门拦、`watchfs` 经 tickd 报 exit-1 这两条）。
+
+
 ## 2. 默认仍然全关（这一条没变）
 
 装完**一条作业都不会自己跑**。脚本在位只是"能跑"，跑不跑由开关决定：

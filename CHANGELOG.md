@@ -1,5 +1,22 @@
 # 变更记录
 
+## 0.5.0 · 2026-11-09
+
+**补上「面板在只有 npm 包、没有私有工具目录的机器上也能出真数据」所缺的那几个库模块。**
+
+- 新增 8 个库文件（都从生产树搬来，**闭包实测** 而非估算）：
+  `src/dsh-butler/lib/` 下 `rollback-offsite-health.mjs` · `secretary-health.mjs` · `state-files.mjs` ·
+  `audit-guard.mjs` · `collect-failure-ledger.mjs` · `manual-actions.mjs` · `sync-topology.mjs`；
+  `src/dsh-butler/` 下 `butler-doc-discipline-cli.mjs`。
+  选这两个目录的原因：engine 的 `src/` 就是生产 `tools/` 的镜像（`src/dsh-butler/lib` ↔ `tools/dsh-butler/lib`），
+  相对 import 的形状才能原样保持。
+- 4 处跨区 import 改指 `../../../jobs/lib/…`（`audit-guard` ×3 · `manual-actions` ×1）—— 那几件在 engine 里
+  只存在于 `jobs/lib/`，engine 既有约定就是跨区写相对路径（`jobs/lib/*` 亦反向指 `src/dsh-butler/lib`）。
+- 脱敏：机器名 / 主机账号 / 盘符绝对路径一律中性化（路径改 `<workspace>` 占位，代码默认值改成运行时可推导）。
+- 新增 `examples/first-run.json`：第一次装完先开哪 3~5 条（只读 / 可逆 / 不碰外部数据的那些），
+  含开关文件的确切形状与三步验收命令；`jobs/README.md` 增一节「第一次装完先开哪几条」。
+- 判据：`node --check` 全仓 0 失败；`npm test` 全过；隔离进程里 8 件全部可加载；脱敏扫描 `待复核=0`。
+
 ## 0.4.1 · 2026-11-09
 
 **只订正文档计数，代码一个字没改。**
