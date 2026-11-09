@@ -61,7 +61,7 @@ await notify({ level: 'warn', title: '卡跑挂了', body: '…', dedupeKey: 'ca
 ```
 
 不注入时：往 stderr 打一行 `[butler:notify] …`，返回值 `{ ok:false, error:'no-channel' }`——
-**看得见，但不假装发出去了**。开关默认关（`<数据根>/butler-alert.json` 里 `channels.alert`），
+**看得见，但不假装发出去了**。开关默认关（`<数据根>/butler-alert.json` 里 `channels.alert`；`<数据根>` = DSH 的数据目录，默认 `~/.dsh`），
 同一 `dedupeKey` 同一本地日只真发一次。
 
 ## 0.4.0 新增：`jobs/` 作业脚本（可选附带品）
@@ -169,7 +169,7 @@ butler-tickd --status
 |---|---|---|
 | 心跳 / 单实例锁 / 调度日志 | `%TEMP%\dsh-butler-tickd\`（`state.json` / `lock` / `dsh-butler-tickd.log`） | 环境变量 `DSH_TICKD_DIR` |
 | 配置与审计（放行开关、审计流水、告警日志） | `~/.dsh`（Windows：`%USERPROFILE%\.dsh`） | 环境变量 `BUTLER_DSH_HOME` 或 `DSH_HOME` |
-| 作业脚本树根（作业表里 `path.join(DSH, …)` 那部分） | `~/dsh`（Windows 上落在用户目录下的 `dsh` 子目录） | 环境变量 `BUTLER_ROOT` |
+| 作业脚本树根（告诉它作业脚本放哪；作业表里 `path.join(DSH, …)` 那部分） | `~/dsh`（Windows 上落在用户目录下的 `dsh` 子目录） | 环境变量 `BUTLER_ROOT` |
 
 ## 已知限制（第一版就说清楚）
 
