@@ -77,7 +77,7 @@ export const ENTITIES_INDEX_REV = 8;
  *  ⇒ **判定：维持 0.05**（比方案原口径更严 = 提示更干净，且是 2026-09-12 实测后的主动收紧，非漂移）；
  *    方案 §4 P7（L944）的「>10%」以**就地订正注**对齐，不改方案原文。
  *  🔁 **同日三次复测（2026-10-10 · 卡「冲刺600·I域P6P7两项」· **同一语料快照** A/B 对照，
- *    脚本 `D:\DSH\_tmp\p7-idf\compare-idf.mjs`，只读不落盘）**：语料 4372 载体 ⇒
+ *    脚本 `_tmp\p7-idf\compare-idf.mjs`，只读不落盘）**：语料 4372 载体 ⇒
  *      · ratio=0.05 ⇒ idfLimit 219 / highFreq 14；
  *      · ratio=0.10 ⇒ idfLimit 438 / highFreq 3；
  *      · **耦合候选 70 → 70（一条不增不减）；脱管候选 4 → 6（多出 doc / docs 两个 kind 名）**。
