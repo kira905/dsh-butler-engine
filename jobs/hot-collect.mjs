@@ -18,7 +18,7 @@
 //   node <pkg>\jobs\hot-collect.mjs [--dry-run] [--json]
 //        [--skip-sessions] [--skip-ledger] [--limit <n>] [--no-push] [--status]
 //
-// 退出码：0 完成（result=ok）/ 3 deferred（有未完成项）或抢不到锁 / 1 失败
+// 退出码：0 完成（result=ok；result=skipped 也算 0 —— 那是「备份根未配置」，见下）/ 3 deferred（有未完成项）或抢不到锁 / 1 失败
 //
 // 方案：docs\管家v2.5-P9会交接与云中继方案-20260910.md §8 / §5.3 / §5.7 / §17.2 T4
 import fs from 'node:fs';
@@ -40,7 +40,12 @@ import { readVersionFile, localVersionPath } from '../src/dsh-butler/lib/handoff
 import { resolveStatePath } from '../src/dsh-butler/lib/state-paths.mjs';
 
 const DSH_ROOT = process.env.BUTLER_HANDOFF_ROOT || workspaceRoot();
-const GIT_BACKUP = process.env.BUTLER_HANDOFF_GITBACKUP || gitBackupRoot();
+// 备份根：**「显式指定」与「缺省推导」必须能分开**（卡 B15）——
+//   collectHot 只有知道「人到底有没有说过它在哪」，才能区分「没配置（干净机器的正常态）」
+//   与「配了但坏了（真故障）」。派生值一旦混进来，这两种情况长得一模一样。
+const GIT_BACKUP_RAW = String(process.env.BUTLER_HANDOFF_GITBACKUP ?? '').trim();
+const GIT_BACKUP = GIT_BACKUP_RAW || gitBackupRoot();
+const GIT_BACKUP_EXPLICIT = Boolean(GIT_BACKUP_RAW) || Boolean(String(process.env.DSH_GITBACKUP_ROOT ?? '').trim());
 /** 【2c-B3】状态路径统一入口（legacy 期 = 旧名，行为零变化）。 */
 const stateFileOf = (name, home) => resolveStatePath(name, { home }).path;
 const STATE_NAME = 'butler-handoff-hot.json';
@@ -187,7 +192,7 @@ export async function run(argv = process.argv.slice(2)) {
     log(`    口径：${REPO_RETIRE_NOTE}`);
 
     const res = await collectHot({
-      dshRoot: DSH_ROOT, gitBackup: GIT_BACKUP, host,
+      dshRoot: DSH_ROOT, gitBackup: GIT_BACKUP, gitBackupExplicit: GIT_BACKUP_EXPLICIT, host,
       dryRun: o.dryRun, skipSessions: o.skipSessions, skipLedger: o.skipLedger,
       maxSessions: o.limit ?? 400, push: o.noPush ? false : true,
       allowDivergence: o.allowDivergence,
@@ -195,7 +200,11 @@ export async function run(argv = process.argv.slice(2)) {
       warnOnCap: o.limit === null,   // 显式 --limit 是用户主动限量：不当异常告警
     });
 
-    section(`热采 · 结果 result=${res.result}（${res.durationMs}ms）`);
+    section(`热采 · 结果 result=${res.result}（${res.durationMs ?? '-'}ms）`);
+    // skipped = 备份根未配置（干净机器上的正常态，不是故障）⇒ 必须说清楚，别让人以为是"跑了但没采到"。
+    if (res.result === 'skipped') {
+      log(`    本轮跳过（${res.skippedReason ?? '未配置'}）：不是故障，未采集任何文件 —— 该设哪个变量见下面 info 行`);
+    }
     if (res.gates?.enabled) {
       log(`    推前安全门：${res.gates.allowDivergence ? '⚠️ 已用 --allow-divergence 跳过' : '开启'}（分支 ${res.gates.branch}）`);
       for (const [repo, g] of Object.entries(res.gates.preCollect ?? {})) log(`      · 采集前 ${repo}: ${g.safe ? '🟢 ' + (g.basis ?? 'safe') : `${g.hard ? '🔴' : '🟡'} ${g.code}`} — ${g.reason}`);
@@ -286,6 +295,8 @@ export async function run(argv = process.argv.slice(2)) {
 
     OUT.json = { hot: res, version: HOT_COLLECT_VERSION };
     if (o.json) process.stdout.write('\n---JSON---\n' + JSON.stringify(OUT.json, null, 2) + '\n');
+    // skipped（= 备份根未配置）算**正常结束**：干净机器上「本机没开这个功能」不该以 1 退出（卡 B15）。
+    if (res.result === 'skipped') return 0;
     return res.result === 'ok' || res.result === 'dry-run' ? 0 : (res.result === 'deferred' || res.result === 'blocked' ? 3 : 1);
   } finally {
     if (lock && typeof lock.release === 'function') lock.release();

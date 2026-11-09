@@ -1,5 +1,27 @@
 # 变更记录
 
+## 0.5.3 · 2026-11-09
+
+**修两个「干净新机器上装完就坏」的真缺陷（都在作业层；已在跑的老机器行为不变）。**
+
+- 🔴 **补上 `jobs/lib/reconcile.mjs` 与它的两个依赖**（`entities.mjs` · `entity-stopwords.mjs`）：
+  `jobs/butler-reconcile.mjs` 一直 `import './lib/reconcile.mjs'`，而包里**从来没有这个文件**
+  —— 干净机器上该作业 100% `ERR_MODULE_NOT_FOUND`。三件原样搬入，改动只有两处：
+  ① 跨层 import 从 `./paths.mjs` 这类改指 `../../src/dsh-butler/lib/…`（与本包 57 个作业库的既有写法一致）；
+  ② `dshRoot()` 的缺省值从作者机器的盘符换成 `~/DSH`（`DSH_BUTLER_DSH_ROOT` 仍可覆盖）。
+  判据（现跑）：`node --check` 三件 0 失败；空语料与真语料各跑一次 `jobs/butler-reconcile.mjs --check --dry-run`
+  均 **rc=0**，且跑完 home 目录**新增 0 个文件**（dry-run 真不写）。
+- **`hot` 不再假设「作者机器上那棵备份树存在」**：`gitBackupRoot()` 的缺省 `~/dsh-git-backup` 只是推导，
+  不是每台机器都该有的布局。原来干净机器上找不到它就直接 `repo-missing` + 退出 1 —— 装上就报错，
+  而且**不告诉人该设哪个变量**。现在把「没配置」与「配了但坏了」分开：
+  · 从没指定过、且缺省根**整个不存在** ⇒ `result=skipped`（不是故障）、info 级指引、**退出码 0**；
+  · 显式指定过（`BUTLER_HANDOFF_GITBACKUP` / `DSH_GITBACKUP_ROOT`）而目录缺 ⇒ **仍 failed / 退出 1**；
+  · 缺省根存在、但工作副本缺 `.git` ⇒ **仍 failed / 退出 1**（有人建了一半 / 原来有现在没了）。
+  严重度只在「这台机器压根没开这个功能」这一种情况下放宽，其余一分不减。
+- 作业层配套：`jobs/lib/ws-root.mjs` 增 `gitBackupRootInfo()`（返回根 + 来源），
+  `jobs/hot-collect.mjs` 补齐 `skipped` 的退出码与一行人话说明；`jobs/lib/hot-collect.mjs` 的结果里多
+  `gitBackup:{root,source}` 与 `skippedReason`，面板/日报可直接读。
+
 ## 0.5.2 · 2026-11-09
 
 **回修：把通道痕迹从公开包里清掉（撤回 0.5.0 顺手带进来的一件，中性化另一件）。**

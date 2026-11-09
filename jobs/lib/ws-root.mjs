@@ -26,11 +26,23 @@ export function workspaceRoot(env = process.env) {
   return path.join(os.homedir(), 'DSH');
 }
 
-/** 盘外副本 / 冷备根（不进同步目录的那种）。 */
+/** 盘外副本 / 冷备根（不进同步目录的那种）。
+ *
+ *  ⚠️ 缺省值 `~/dsh-git-backup` 只是**约定俗成的推导**，不是「每台机器必须有」。
+ *  调用方要判断「这个根不在」算不算故障时，用 `gitBackupRootInfo()` 看 `source`：
+ *    · `env:*` = 使用者显式指定过 ⇒ 缺了是**真故障**（说在哪就该在哪）；
+ *    · `default` = 从没配过 ⇒ 缺了只是**还没配置**，干净机器上属正常态，不该按故障处理。
+ *  要换位置：设 `DSH_GITBACKUP_ROOT`（本模块）或作业自己的覆盖变量（如 `BUTLER_HANDOFF_GITBACKUP`）。
+ */
 export function gitBackupRoot(env = process.env) {
+  return gitBackupRootInfo(env).root;
+}
+
+/** 备份根 + 它的来源（`env:DSH_GITBACKUP_ROOT` / `default`）。 */
+export function gitBackupRootInfo(env = process.env) {
   const explicit = str('DSH_GITBACKUP_ROOT', env);
-  if (explicit) return path.resolve(explicit);
-  return path.join(os.homedir(), 'dsh-git-backup');
+  if (explicit) return { root: path.resolve(explicit), source: 'env:DSH_GITBACKUP_ROOT' };
+  return { root: path.join(os.homedir(), 'dsh-git-backup'), source: 'default' };
 }
 
 /** 记忆快照文件名前缀（形如 `mem-snapshot-YYYYMMDD-HHMMSS-<sha8>.db`）。 */

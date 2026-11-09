@@ -642,6 +642,39 @@ export async function collectHot(opts = {}) {
     'dsh-workspace': path.join(gitBackup, 'dsh-workspace'),
   };
 
+  // 0) 备份根：「没配」与「配了但坏了」必须分开（2026-11-09 · 卡 B15）
+  //
+  // 为什么：`gitBackupRoot()` 的缺省是 `~/dsh-git-backup` —— 那是**作者机器上的布局**，不是通用约定。
+  //   干净新机器上一次都没配过 ⇒ 缺省目录根本不存在 ⇒ 原来直接判 `failed`，表现是「装上就报错」，
+  //   而且报出来的只有 `repo-missing` + 一个绝对路径，**不告诉人该设哪个变量**（B14 关 3 现跑抓到）。
+  // 判据（两条同时满足才跳）：
+  //   ① 备份根是**缺省推导**来的（`opts.gitBackupExplicit !== true`，没人显式指定过）；
+  //   ② 这个根**整个都不存在**（不是「根在、只是工作副本缺」）。
+  //   命中 ⇒ result = 'skipped'（= 未配置，不是故障），info 级指引，CLI 退出码 0。
+  // 不跳的两种情况（严重度一分不减）：
+  //   · 显式指定过（BUTLER_HANDOFF_GITBACKUP / DSH_GITBACKUP_ROOT）⇒ 缺了仍 failed；
+  //   · 缺省根存在但 `dsh-core` / `dsh-workspace` 的工作副本缺 `.git` ⇒ 仍 failed（有人建了一半/原来有现在没了）。
+  // 为什么用「调用方传布尔」而不是在本函数里重新读 env 猜：CLI 层已经把 env / 推导值算好、
+  //   当成 `opts.gitBackup` 传进来了（见 jobs/hot-collect.mjs 的 GIT_BACKUP），本函数里再也分不清
+  //   「人指定的」与「它自己推出来的」。⇒ 判据只留一个可选布尔 `opts.gitBackupExplicit`，
+  //   缺省 false = 没人说过它在哪（单测/其它调用方不传也是这个语义）。
+  const gitBackupExplicit = opts.gitBackupExplicit === true;
+  const gitBackupInfo = { root: gitBackup, source: gitBackupExplicit ? 'explicit' : 'derived' };
+  out.gitBackup = gitBackupInfo;
+  if (!gitBackupExplicit && !fs.existsSync(gitBackup)) {
+    out.result = 'skipped';
+    out.skippedReason = 'gitbackup-not-configured';
+    out.finishedAt = nowIso(now);
+    out.alerts.push({
+      level: 'info',
+      code: 'gitbackup-not-configured',
+      message: `备份根未配置：缺省路径 ${gitBackup} 不存在 → 本轮不采集（不是故障）。`
+        + '要启用：设 BUTLER_HANDOFF_GITBACKUP 或 DSH_GITBACKUP_ROOT，'
+        + '指向含 dsh-core / dsh-workspace 工作副本的目录。',
+    });
+    return out;
+  }
+
   // 0) 仓库可用性
   //   仓1/仓3 是**必需**（小文件与文档的落地目标）→ 缺了整轮失败；
   //   仓2 是**可选**（无会话要搬 / 未配置会话仓时不该让整轮失败）→ 缺了只记 warn 并跳过会话段。
