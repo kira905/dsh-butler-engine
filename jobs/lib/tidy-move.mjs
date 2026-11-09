@@ -114,8 +114,8 @@ export const TMP_MOVE_EXCLUDE_BASIS = 'docs\\交付报告-生态维护与V3需�
  *      临时/一次性用：`--no-exclude`（整体绕过）或 `--exclude a,b`（临时追加，见下）。
  */
 export const TMP_MOVE_EXCLUDE = Object.freeze([
-  { name: 'supplier-samples', since: '2026-10-16', why: '国铁采购平台「供应商入驻审核」项目的真实样本目录 —— 是否继续用未决' },
-  { name: 'supplier-audit-ledger', since: '2026-10-16', why: '同项目的审核台账产物 —— 是否继续用未决' },
+  { name: 'supplier-samples', since: '2026-10-16', why: '外部甲方「供应商入驻审核」业务的真实样本目录（甲方名称不在开源面复述）—— 是否继续用未决' },
+  { name: 'supplier-audit-ledger', since: '2026-10-16', why: '同上业务的审核台账产物 —— 是否继续用未决' },
   { name: 'see-video', since: '2026-10-16', why: '「看视频」技能的工作目录（yt-dlp 取片 / 抽帧产物）—— 是否继续用未决' },
   // 2026-10-22 增补（家庭保姆线 · ②-C 方案 §4 N6）：refcheck 的 docs/tools/skills 三条已全部放宽为
   //   blocking:false（2026-10-13 / 2026-10-15 主人拍板）⇒「被文档反复提及」不再能拦住它 ⇒ 必须走本名单。
